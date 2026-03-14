@@ -9,15 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'base-100': 'var(--base-100)',
-        'base-200': 'var(--base-200)',
-        'base-300': 'var(--base-300)',
-        'base-content': 'var(--base-content)',
-        primary: 'var(--primary)',
-        'primary-content': 'var(--primary-content)',
-        secondary: 'var(--secondary)',
-        accent: 'var(--accent)',
-        neutral: 'var(--neutral)',
+        'base-100': 'hsl(var(--base-100))',
+        'base-200': 'hsl(var(--base-200))',
+        'base-300': 'hsl(var(--base-300))',
+        'base-content': 'hsl(var(--base-content))',
+        primary: 'hsl(var(--primary))',
+        'primary-content': 'hsl(var(--primary-content))',
+        secondary: 'hsl(var(--secondary))',
+        accent: 'hsl(var(--accent))',
+        neutral: 'hsl(var(--neutral))',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],

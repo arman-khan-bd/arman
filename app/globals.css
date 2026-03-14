@@ -3,39 +3,39 @@
 @tailwind utilities;
 
 :root {
-  --base-100: #ffffff;
-  --base-200: #f2f2f2;
-  --base-300: #e5e6e6;
-  --base-content: #1f2937;
-  --primary: #570df8;
-  --primary-content: #ffffff;
-  --secondary: #f000b8;
-  --accent: #37cdbe;
-  --neutral: #3d4451;
+  --base-100: 0 0% 100%;
+  --base-200: 0 0% 95%;
+  --base-300: 210 2% 90%;
+  --base-content: 215 28% 17%;
+  --primary: 258 92% 50%;
+  --primary-content: 0 0% 100%;
+  --secondary: 312 100% 47%;
+  --accent: 174 57% 51%;
+  --neutral: 215 14% 28%;
 }
 
 [data-theme='dark'] {
-  --base-100: #1d232a;
-  --base-200: #191e24;
-  --base-300: #15191e;
-  --base-content: #a6adbb;
-  --primary: #661ae6;
-  --primary-content: #ffffff;
-  --secondary: #d926aa;
-  --accent: #1fb2a6;
-  --neutral: #2a323c;
+  --base-100: 215 19% 14%;
+  --base-200: 216 18% 12%;
+  --base-300: 216 22% 10%;
+  --base-content: 215 16% 70%;
+  --primary: 265 80% 50%;
+  --primary-content: 0 0% 100%;
+  --secondary: 316 70% 50%;
+  --accent: 175 69% 41%;
+  --neutral: 215 18% 20%;
 }
 
 [data-theme='luxury'] {
-  --base-100: #09090b;
-  --base-200: #18181b;
-  --base-300: #27272a;
-  --base-content: #d4d4d8;
-  --primary: #ffffff;
-  --primary-content: #000000;
-  --secondary: #a1a1aa;
-  --accent: #52525b;
-  --neutral: #3f3f46;
+  --base-100: 240 10% 4%;
+  --base-200: 240 9% 10%;
+  --base-300: 240 5% 16%;
+  --base-content: 240 5% 83%;
+  --primary: 0 0% 100%;
+  --primary-content: 0 0% 0%;
+  --secondary: 240 4% 65%;
+  --accent: 240 6% 34%;
+  --neutral: 240 4% 25%;
 }
 
 @layer base {
