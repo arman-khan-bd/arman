@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Braces, Globe, Search, User, Share2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { ImageUploader } from '../../../components/admin/ImageUploader';
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -57,6 +58,10 @@ export default function ManageSettingsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile(prev => prev ? { ...prev, [name]: value } : null);
+  };
+
+  const handleImageUrlChange = (fieldName: keyof Profile, url: string | null) => {
+    setProfile(prev => prev ? { ...prev, [fieldName]: url } : null);
   };
 
   const handleSaveChanges = async () => {
@@ -129,10 +134,25 @@ export default function ManageSettingsPage() {
           {activeTab === 'branding' && (
             <div className="space-y-8">
               <h2 className="text-xl font-bold">Branding</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <input type="text" name="logoImageUrl" value={profile.logoImageUrl || ''} onChange={handleInputChange} placeholder="Logo Image URL" className={inputClass} />
-                 <input type="text" name="faviconUrl" value={profile.faviconUrl || ''} onChange={handleInputChange} placeholder="Favicon URL" className={inputClass} />
-                 <input type="text" name="socialSharePhotoUrl" value={profile.socialSharePhotoUrl || ''} onChange={handleInputChange} placeholder="Social Share Photo URL" className={inputClass} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ImageUploader
+                  label="Logo Image"
+                  currentUrl={profile.logoImageUrl}
+                  onUrlChange={(url) => handleImageUrlChange('logoImageUrl', url)}
+                  folderPath="branding"
+                />
+                <ImageUploader
+                  label="Favicon (.ico, .svg, .png)"
+                  currentUrl={profile.faviconUrl}
+                  onUrlChange={(url) => handleImageUrlChange('faviconUrl', url)}
+                  folderPath="branding"
+                />
+                <ImageUploader
+                  label="Social Share Photo"
+                  currentUrl={profile.socialSharePhotoUrl}
+                  onUrlChange={(url) => handleImageUrlChange('socialSharePhotoUrl', url)}
+                  folderPath="branding"
+                />
               </div>
             </div>
           )}
@@ -198,4 +218,3 @@ export default function ManageSettingsPage() {
     </div>
   );
 }
-    
