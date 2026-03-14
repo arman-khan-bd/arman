@@ -75,7 +75,7 @@ export const BlogCard = () => {
           Read All
         </a>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-6">
         {posts.map((post, index) => (
           <motion.a
             key={post.id}
@@ -86,10 +86,10 @@ export const BlogCard = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
-            className="card overflow-hidden hover:shadow-md transition-all group flex flex-col"
+            className="card overflow-hidden hover:shadow-md transition-all group flex flex-col sm:flex-row"
           >
             {(post.cover_image || post.social_image) && (
-              <div className="aspect-video relative overflow-hidden">
+              <div className="sm:w-1/3 aspect-video sm:aspect-auto relative overflow-hidden">
                 <Image 
                   src={post.cover_image || post.social_image} 
                   alt={post.title}
@@ -99,20 +99,20 @@ export const BlogCard = () => {
                 />
               </div>
             )}
-            <div className="p-4 flex flex-col flex-1">
-              <div className="flex items-center gap-2 text-xs text-base-content/50 mb-2">
-                <Calendar size={12} />
+            <div className={`p-6 flex flex-col flex-1 ${(post.cover_image || post.social_image) && 'sm:w-2/3'}`}>
+              <div className="flex items-center gap-2 text-sm text-base-content/50 mb-2">
+                <Calendar size={14} />
                 <span>{format(new Date(post.published_at), 'MMM dd, yyyy')}</span>
               </div>
-              <h3 className="font-bold text-sm mb-2 group-hover:text-primary transition-colors line-clamp-2">
+              <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2">
                 {post.title}
               </h3>
-              <p className="text-xs text-base-content/60 line-clamp-3 mb-4 flex-1">
+              <p className="text-sm text-base-content/60 line-clamp-2 mb-4 flex-1">
                 {post.description}
               </p>
-              <div className="flex items-center gap-1 text-xs font-bold text-primary">
+              <div className="flex items-center gap-2 text-sm font-bold text-primary">
                 <span>Read More</span>
-                <BookOpen size={12} />
+                <BookOpen size={16} />
               </div>
             </div>
           </motion.a>

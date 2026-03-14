@@ -72,7 +72,7 @@ export const gitprofileConfig = {
   blog: {
     source: 'dev', // medium | dev
     username: 'arifszn', // Set your username
-    limit: 3, // How many posts to display. Max is 10.
+    limit: 6, // How many posts to display. Max is 10.
   },
   googleAnalytics: {
     id: '', // GA3812918895
