@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-base-100: var(--base-100);
+  --color-base-200: var(--base-200);
+  --color-base-300: var(--base-300);
+  --color-base-content: var(--base-content);
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-content);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-neutral: var(--neutral);
+}
+
+:root {
+  --base-100: #ffffff;
+  --base-200: #f2f2f2;
+  --base-300: #e5e6e6;
+  --base-content: #1f2937;
+  --primary: #570df8;
+  --primary-content: #ffffff;
+  --secondary: #f000b8;
+  --accent: #37cdbe;
+  --neutral: #3d4451;
+}
+
+[data-theme='dark'] {
+  --base-100: #1d232a;
+  --base-200: #191e24;
+  --base-300: #15191e;
+  --base-content: #a6adbb;
+  --primary: #661ae6;
+  --primary-content: #ffffff;
+  --secondary: #d926aa;
+  --accent: #1fb2a6;
+  --neutral: #2a323c;
+}
+
+[data-theme='luxury'] {
+  --base-100: #09090b;
+  --base-200: #18181b;
+  --base-300: #27272a;
+  --base-content: #d4d4d8;
+  --primary: #ffffff;
+  --primary-content: #000000;
+  --secondary: #a1a1aa;
+  --accent: #52525b;
+  --neutral: #3f3f46;
+}
+
+@layer base {
+  body {
+    @apply bg-base-200 text-base-content font-sans transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-base-100 rounded-2xl shadow-sm border border-base-300;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all active:scale-95 disabled:opacity-50;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-content hover:bg-primary/90;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+  
+  .avatar {
+    @apply inline-flex;
+  }
+}
