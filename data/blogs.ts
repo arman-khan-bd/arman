@@ -5,6 +5,8 @@ export interface Blog {
   date: string; // ISO 8601 format
   cover_image: string;
   content: string; // Markdown content
+  categories: string[];
+  tags: string[];
 }
 
 export const blogsData: Blog[] = [
@@ -14,6 +16,8 @@ export const blogsData: Blog[] = [
     description: 'Large language models are increasingly embedded into developer tools, products, and workflows—but...',
     date: '2026-02-19T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog1/1200/800',
+    categories: ['AI', 'Development', 'Tooling'],
+    tags: ['MCP', 'LLM', 'AI Integration'],
     content: `
 ## Introduction
 
@@ -43,6 +47,8 @@ Stay tuned as MCP continues to evolve and unlock new possibilities for AI-assist
     description: 'Cursor just shipped Parallel Agents, a way to run multiple agents on different tasks at the same...',
     date: '2025-11-07T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog2/1200/800',
+    categories: ['VCS', 'Development', 'Git'],
+    tags: ['Git', 'Worktree', 'Productivity'],
     content: `
 ## The Challenge of Parallel Work
 
@@ -75,6 +81,8 @@ This is the core technology that enables features like Cursor's Parallel Agents,
     description: 'Modern software teams rarely push code directly to the main branch. As projects grow, a clear...',
     date: '2025-08-25T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog3/1200/800',
+    categories: ['VCS', 'Best Practices', 'Git'],
+    tags: ['Git', 'Gitflow', 'Branching'],
     content: `
 ## What is Gitflow?
 
@@ -96,10 +104,12 @@ While simpler models like GitHub Flow have become popular for projects with cont
   },
   {
     slug: 'api-rate-limiting',
-    title: 'Prevent API Overload: A Comprehensive Guide to Rate Limiting with Bottleneck',
+    title: 'Prevent API Overload: A Comprehensive Guide to Rate Limiting',
     description: 'In the realm of modern web development, APIs have become the lifeblood of our applications. They...',
     date: '2024-05-13T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog4/1200/800',
+    categories: ['Web Development', 'API', 'Best Practices'],
+    tags: ['Rate Limiting', 'Node.js', 'API'],
     content: `
 Content for API Rate Limiting blog post.
     `,
@@ -110,6 +120,8 @@ Content for API Rate Limiting blog post.
     description: 'Git, a distributed version control system, offers a variety of ways developers can integrate changes...',
     date: '2024-01-04T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog5/1200/800',
+    categories: ['VCS', 'Git', 'Tutorial'],
+    tags: ['Git', 'Rebase', 'Merge'],
     content: `
 Content for Git Rebase vs Merge blog post.
     `,
@@ -120,6 +132,8 @@ Content for Git Rebase vs Merge blog post.
     description: 'Most of us are familiar with Amazon Web Services (AWS) and have probably used their cloud computing...',
     date: '2023-10-11T10:00:00Z',
     cover_image: 'https://picsum.photos/seed/blog6/1200/800',
+    categories: ['Tooling', 'Cloud', 'Development'],
+    tags: ['AWS', 'LocalStack', 'Docker'],
     content: `
 Content for LocalStack blog post.
     `,
@@ -137,4 +151,14 @@ export const getBlogs = (limit?: number) => {
 
 export const getBlogBySlug = (slug: string): Blog | undefined => {
   return blogsData.find((blog) => blog.slug === slug);
+};
+
+export const getCategories = (): string[] => {
+  const categories = blogsData.flatMap(blog => blog.categories);
+  return [...new Set(categories)];
+};
+
+export const getTags = (): string[] => {
+  const tags = blogsData.flatMap(blog => blog.tags);
+  return [...new Set(tags)];
 };
