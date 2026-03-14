@@ -18,7 +18,7 @@ export const gitprofileConfig = {
     medium: '',
     dev: '',
     website: 'https://armankhan.me',
-    phone: '',
+    phone: '+11234567890',
     email: 'contact@armanalikhan.com',
   },
   resume: {
@@ -73,11 +73,11 @@ export const gitprofileConfig = {
   themeConfig: {
     defaultTheme: 'lofi',
     // Hides the switch finger icon that appears on the bottom right corner
-    disableSwitch: false,
+    disableSwitch: true,
     // Should use the user's system theme as the default theme
-    respectPrefersColorScheme: false,
+    respectPrefersColorScheme: true,
     // Hide the theme switcher
-    hideThemeSwitch: false,
+    hideThemeSwitch: true,
     // Custom themes
     themes: [
       'light',
