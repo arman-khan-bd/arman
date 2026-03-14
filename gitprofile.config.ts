@@ -15,8 +15,8 @@ export const gitprofileConfig = {
     instagram: '',
     dribbble: '',
     behance: '',
-    medium: 'arifszn',
-    dev: 'arifszn',
+    medium: '',
+    dev: '',
     website: 'https://arifszn.com',
     phone: '',
     email: 'arifulalamszn@gmail.com',
@@ -68,12 +68,6 @@ export const gitprofileConfig = {
       to: '2014',
     },
   ],
-  // Display blog posts from your medium or dev account. (Optional)
-  blog: {
-    source: 'dev', // medium | dev
-    username: 'arifszn', // Set your username
-    limit: 6, // How many posts to display. Max is 10.
-  },
   googleAnalytics: {
     id: '', // GA3812918895
   },
