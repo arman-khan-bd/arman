@@ -38,7 +38,7 @@ export const BlogCard = ({
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post, index) => (
           <motion.a
             key={post.slug}
@@ -47,9 +47,9 @@ export const BlogCard = ({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
-            className="card overflow-hidden hover:shadow-md transition-all group flex flex-col sm:flex-row"
+            className="card overflow-hidden hover:shadow-md transition-all group flex flex-col"
           >
-            <div className="sm:w-1/3 aspect-video sm:aspect-auto relative overflow-hidden">
+            <div className="aspect-video relative overflow-hidden">
               <Image 
                 src={post.cover_image} 
                 alt={post.title}
@@ -58,7 +58,7 @@ export const BlogCard = ({
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className={`p-6 flex flex-col flex-1 sm:w-2/3`}>
+            <div className="p-6 flex flex-col flex-1">
               <div className="flex items-center gap-2 text-sm text-base-content/50 mb-2">
                 <Calendar size={14} />
                 <span>{format(new Date(post.date), 'MMM dd, yyyy')}</span>
