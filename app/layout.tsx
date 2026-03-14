@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/ThemeProvider';
+import { FirebaseClientProvider } from '../src/firebase/client-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -18,8 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body className="antialiased">
-        <ThemeProvider />
-        {children}
+        <FirebaseClientProvider>
+          <ThemeProvider />
+          {children}
+        </FirebaseClientProvider>
       </body>
     </html>
   );
