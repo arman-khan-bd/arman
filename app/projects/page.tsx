@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ProjectsCard } from '@/components/ProjectsCard';
+import { ProjectsCard } from '../../components/ProjectsCard';
 import { motion } from 'motion/react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

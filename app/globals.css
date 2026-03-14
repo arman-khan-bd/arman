@@ -1,16 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --color-base-100: var(--base-100);
-  --color-base-200: var(--base-200);
-  --color-base-300: var(--base-300);
-  --color-base-content: var(--base-content);
-  --color-primary: var(--primary);
-  --color-primary-content: var(--primary-content);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-neutral: var(--neutral);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --base-100: #ffffff;

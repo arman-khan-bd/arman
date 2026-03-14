@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
-import { ProfileCard, DetailsCard } from '@/components/ProfileCards';
-import { SkillsCard } from '@/components/SkillsCard';
-import { ExperienceCard, EducationCard } from '@/components/TimelineCards';
-import { ProjectsCard } from '@/components/ProjectsCard';
-import { BlogCard } from '@/components/BlogCard';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { ProfileCard, DetailsCard } from '../components/ProfileCards';
+import { SkillsCard } from '../components/SkillsCard';
+import { ExperienceCard, EducationCard } from '../components/TimelineCards';
+import { ProjectsCard } from '../components/ProjectsCard';
+import { BlogCard } from '../components/BlogCard';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
 

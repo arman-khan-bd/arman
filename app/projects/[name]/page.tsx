@@ -15,8 +15,8 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import Image from 'next/image';
-import { getProjectDetails } from '@/data/projects';
-import { OrderModal } from '@/components/OrderModal';
+import { getProjectDetails } from '../../../data/projects';
+import { OrderModal } from '../../../components/OrderModal';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
