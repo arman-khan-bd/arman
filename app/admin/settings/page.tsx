@@ -102,7 +102,7 @@ export default function ManageSettingsPage() {
                  <input type="text" placeholder="Company" className={inputClass} />
                  <input type="text" placeholder="LinkedIn username" className={inputClass} />
                  <input type="text" placeholder="Twitter username" className={inputClass} />
-                 <input type="text" placeholder="Website URL" className={inputClass} />
+                 <input type="text" placeholder="https://armankhan.me" className={inputClass} />
                  <input type="email" placeholder="Email" className={inputClass} />
               </div>
             </div>

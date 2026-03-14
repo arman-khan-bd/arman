@@ -17,7 +17,7 @@ export const gitprofileConfig = {
     behance: '',
     medium: '',
     dev: '',
-    website: '',
+    website: 'https://armankhan.me',
     phone: '',
     email: 'contact@armanalikhan.com',
   },
