@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Allow access to remote image placeholder.
+  // Allow access to remote image placeholder and configure for Cloudflare.
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
