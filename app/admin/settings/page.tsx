@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Save, Braces, Globe, Search, User, Share2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { ImageUploader } from '../../../components/admin/ImageUploader';
-import { FileUploader } from '../../../components/admin/FileUploader';
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -61,10 +59,6 @@ export default function ManageSettingsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile(prev => prev ? { ...prev, [name]: value } : null);
-  };
-
-  const handleImageUrlChange = (fieldName: keyof Profile, url: string | null) => {
-    setProfile(prev => prev ? { ...prev, [fieldName]: url } : null);
   };
 
   const handleSaveChanges = async () => {
@@ -137,25 +131,19 @@ export default function ManageSettingsPage() {
           {activeTab === 'branding' && (
             <div className="space-y-8">
               <h2 className="text-xl font-bold">Branding</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <ImageUploader
-                  label="Logo Image"
-                  currentUrl={profile.logoImageUrl}
-                  onUrlChange={(url) => handleImageUrlChange('logoImageUrl', url)}
-                  folderPath="branding"
-                />
-                <ImageUploader
-                  label="Favicon (.ico, .svg, .png)"
-                  currentUrl={profile.faviconUrl}
-                  onUrlChange={(url) => handleImageUrlChange('faviconUrl', url)}
-                  folderPath="branding"
-                />
-                <ImageUploader
-                  label="Social Share Photo"
-                  currentUrl={profile.socialSharePhotoUrl}
-                  onUrlChange={(url) => handleImageUrlChange('socialSharePhotoUrl', url)}
-                  folderPath="branding"
-                />
+              <div className="space-y-4">
+                <div>
+                    <label className="text-sm font-bold block mb-2">Logo Image URL</label>
+                    <input type="text" name="logoImageUrl" value={profile.logoImageUrl || ''} onChange={handleInputChange} placeholder="https://example.com/logo.png" className={inputClass} />
+                </div>
+                <div>
+                    <label className="text-sm font-bold block mb-2">Favicon URL (.ico, .svg, .png)</label>
+                    <input type="text" name="faviconUrl" value={profile.faviconUrl || ''} onChange={handleInputChange} placeholder="https://example.com/favicon.ico" className={inputClass} />
+                </div>
+                <div>
+                    <label className="text-sm font-bold block mb-2">Social Share Photo URL</label>
+                    <input type="text" name="socialSharePhotoUrl" value={profile.socialSharePhotoUrl || ''} onChange={handleInputChange} placeholder="https://example.com/social.png" className={inputClass} />
+                </div>
               </div>
             </div>
           )}
@@ -191,30 +179,25 @@ export default function ManageSettingsPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className="space-y-8">
+             <div className="space-y-8">
               <h2 className="text-xl font-bold">About Me</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ImageUploader
-                  label="Profile Photo"
-                  currentUrl={profile.profilePhotoUrl}
-                  onUrlChange={(url) => handleImageUrlChange('profilePhotoUrl', url)}
-                  folderPath="profile"
-                />
-                <FileUploader
-                  label="Resume (PDF)"
-                  currentUrl={profile.resumeUrl}
-                  onUrlChange={(url) => handleImageUrlChange('resumeUrl', url)}
-                  folderPath="documents"
-                  accept="application/pdf"
-                />
+              <div className="space-y-4">
+                <div>
+                    <label className="text-sm font-bold block mb-2">Profile Photo URL</label>
+                    <input type="text" name="profilePhotoUrl" value={profile.profilePhotoUrl || ''} onChange={handleInputChange} placeholder="https://example.com/profile.png" className={inputClass} />
+                </div>
+                <div>
+                    <label className="text-sm font-bold block mb-2">Resume URL (PDF)</label>
+                    <input type="text" name="resumeUrl" value={profile.resumeUrl || ''} onChange={handleInputChange} placeholder="https://example.com/resume.pdf" className={inputClass} />
+                </div>
+                <textarea
+                  name="aboutMe"
+                  value={profile.aboutMe || ''}
+                  onChange={handleInputChange}
+                  className={textareaClass}
+                  placeholder="Write a short bio..."
+                ></textarea>
               </div>
-              <textarea
-                name="aboutMe"
-                value={profile.aboutMe || ''}
-                onChange={handleInputChange}
-                className={textareaClass}
-                placeholder="Write a short bio..."
-              ></textarea>
             </div>
           )}
           
