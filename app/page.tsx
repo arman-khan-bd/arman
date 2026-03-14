@@ -65,10 +65,10 @@ export default function Home() {
             rel="noreferrer"
             className="font-bold text-base-content/80 hover:text-primary transition-colors"
           >
-            {user ? (user as any).name || gitprofileConfig.github.username : gitprofileConfig.github.username}
+            Arman Ali Khan
           </a>
         </div>
-        <p>© {new Date().getFullYear()} GitProfile Clone</p>
+        <p>© {new Date().getFullYear()} Arman Ali Khan</p>
       </footer>
     </div>
   );

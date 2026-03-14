@@ -31,15 +31,15 @@ export const ProfileCard = ({ user }: { user: GitHubUser | null }) => {
           <div className="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden relative">
             <Image 
               src={user.avatar_url} 
-              alt={user.name || user.html_url.split('/').pop() || ''} 
+              alt="Arman Ali Khan" 
               fill
               className="object-cover"
               referrerPolicy="no-referrer"
             />
           </div>
         </div>
-        <h1 className="text-2xl font-bold mb-2">{user.name || gitprofileConfig.github.username}</h1>
-        <p className="text-base-content/70 mb-6 max-w-xs">{user.bio}</p>
+        <h1 className="text-2xl font-bold mb-2">Arman Ali Khan</h1>
+        <p className="text-base-content/70 mb-6 max-w-xs">Full Stack Developer passionate about building modern web applications.</p>
         
         {gitprofileConfig.resume.fileUrl && (
           <a 
@@ -60,12 +60,11 @@ export const DetailsCard = ({ user }: { user: GitHubUser | null }) => {
   if (!user) return <div className="animate-pulse bg-base-300 h-64 rounded-xl mt-4" />;
 
   const details = [
-    { icon: <MapPin size={18} />, label: 'Location', value: user.location },
-    { icon: <Briefcase size={18} />, label: 'Company', value: user.company },
-    { icon: <Github size={18} />, label: 'GitHub', value: gitprofileConfig.github.username, link: user.html_url },
+    { icon: <MapPin size={18} />, label: 'Location', value: user.location || 'Planet Earth' },
+    { icon: <Github size={18} />, label: 'GitHub', value: gitprofileConfig.github.username, link: `https://github.com/${gitprofileConfig.github.username}` },
     { icon: <Linkedin size={18} />, label: 'LinkedIn', value: gitprofileConfig.social.linkedin, link: `https://linkedin.com/in/${gitprofileConfig.social.linkedin}` },
-    { icon: <Twitter size={18} />, label: 'Twitter', value: user.twitter_username || gitprofileConfig.social.twitter, link: `https://twitter.com/${user.twitter_username || gitprofileConfig.social.twitter}` },
-    { icon: <Globe size={18} />, label: 'Website', value: user.blog || gitprofileConfig.social.website, link: user.blog || gitprofileConfig.social.website },
+    { icon: <Twitter size={18} />, label: 'Twitter', value: gitprofileConfig.social.twitter, link: `https://twitter.com/${gitprofileConfig.social.twitter}` },
+    { icon: <Globe size={18} />, label: 'Website', value: gitprofileConfig.social.website, link: gitprofileConfig.social.website },
     { icon: <Mail size={18} />, label: 'Email', value: gitprofileConfig.social.email, link: `mailto:${gitprofileConfig.social.email}` },
   ].filter(item => item.value);
 

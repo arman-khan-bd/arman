@@ -39,7 +39,7 @@ export const AdminSidebar = () => {
   return (
     <div className="h-screen bg-base-100 border-r border-base-300 flex flex-col sticky top-0">
       <div className="p-6 text-center border-b border-base-300">
-        <h2 className="text-xl font-bold text-primary">{gitprofileConfig.github.username}</h2>
+        <h2 className="text-xl font-bold text-primary">Arman's Portfolio</h2>
         <p className="text-xs text-base-content/60">Admin Panel</p>
       </div>
       <nav className="flex-1 p-4 space-y-2">

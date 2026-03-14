@@ -13,7 +13,7 @@ export const MobileAdminHeader = () => {
         <div className="lg:hidden sticky top-0 z-50">
             <div className="bg-base-100/80 backdrop-blur-md border-b border-base-300 h-16 flex items-center justify-between px-4">
                  <div>
-                    <h2 className="text-lg font-bold text-primary">{gitprofileConfig.github.username}</h2>
+                    <h2 className="text-lg font-bold text-primary">Arman's Portfolio</h2>
                     <p className="text-xs text-base-content/60 -mt-1">Admin Panel</p>
                 </div>
                 <button onClick={() => setIsOpen(true)} className="p-2">

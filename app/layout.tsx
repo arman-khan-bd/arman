@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'GitProfile | Portfolio',
-  description: 'A high-quality portfolio template inspired by GitProfile.',
+  title: 'Arman Ali Khan | Full Stack Developer',
+  description: 'The portfolio of Arman Ali Khan, a Full Stack Developer.',
 };
 
 export default function RootLayout({
