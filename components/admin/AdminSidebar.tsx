@@ -21,7 +21,7 @@ import { gitprofileConfig } from '../../gitprofile.config';
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/admin/settings', icon: Settings, label: 'About & Address' },
+  { href: '/admin/settings', icon: Settings, label: 'General Settings' },
   { href: '/admin/skills', icon: Wrench, label: 'Tech Stack' },
   { href: '/admin/experience', icon: Briefcase, label: 'Experience' },
   { href: '/admin/education', icon: GraduationCap, label: 'Education' },
