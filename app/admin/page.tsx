@@ -1,20 +1,45 @@
+'use client';
+
 import React from 'react';
 import { DashboardCard } from '../../components/admin/DashboardCard';
 import { 
   Users,
   ShoppingCart,
   Newspaper,
-  FolderKanban,
-  MessageSquare,
+  Briefcase,
+  GraduationCap,
 } from 'lucide-react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function AdminDashboardPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const blogsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return collection(firestore, `profiles/${user.uid}/blogs`);
+  }, [user, firestore]);
+  const { data: blogs } = useCollection(blogsQuery);
+
+  const experiencesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return collection(firestore, `profiles/${user.uid}/workExperiences`);
+  }, [user, firestore]);
+  const { data: experiences } = useCollection(experiencesQuery);
+
+  const educationsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return collection(firestore, `profiles/${user.uid}/educations`);
+  }, [user, firestore]);
+  const { data: educations } = useCollection(educationsQuery);
+
   const stats = [
     { title: 'Visitors', value: '1,234', icon: Users, change: '+5.2%' },
     { title: 'Orders', value: '56', icon: ShoppingCart, change: '+2' },
-    { title: 'Blog Posts', value: '6', icon: Newspaper, change: '' },
-    { title: 'Projects', value: '8', icon: FolderKanban, change: '' },
-    { title: 'Comments', value: '28', icon: MessageSquare, change: '+4' },
+    { title: 'Blog Posts', value: blogs?.length ?? 0, icon: Newspaper, change: '' },
+    { title: 'Experience', value: experiences?.length ?? 0, icon: Briefcase, change: '' },
+    { title: 'Education', value: educations?.length ?? 0, icon: GraduationCap, change: '' },
   ];
 
   return (
@@ -34,3 +59,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+    

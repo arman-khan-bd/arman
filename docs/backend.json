@@ -72,6 +72,49 @@
           "type": "string",
           "description": "Timestamp when the profile was last updated.",
           "format": "date-time"
+        },
+        "logoImageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the main logo image."
+        },
+        "faviconUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the site favicon."
+        },
+        "socialSharePhotoUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the image used in social media link previews."
+        },
+        "metaDescription": {
+          "type": "string",
+          "description": "SEO meta description for the site."
+        },
+        "metaKeywords": {
+          "type": "string",
+          "description": "Comma-separated SEO meta keywords."
+        },
+        "googleAnalyticsId": {
+          "type": "string",
+          "description": "Google Analytics tracking ID."
+        },
+        "location": {
+          "type": "string",
+          "description": "Physical location (e.g., 'City, Country')."
+        },
+        "company": {
+          "type": "string",
+          "description": "Current company or employer."
+        },
+        "linkedinUsername": {
+          "type": "string",
+          "description": "LinkedIn username."
+        },
+        "twitterUsername": {
+          "type": "string",
+          "description": "Twitter (X) username."
         }
       },
       "required": [
@@ -184,53 +227,111 @@
         "descriptionPoints"
       ]
     },
-    "Publication": {
+    "Blog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Publication",
+      "title": "Blog",
       "type": "object",
-      "description": "Represents a link to an external article, blog post, or publication associated with a user's DevFolio profile.",
+      "description": "Represents a single blog post or article in the portfolio.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Publication entity."
+          "description": "Unique identifier for the Blog entity."
         },
         "profileId": {
           "type": "string",
-          "description": "Reference to the Profile this publication belongs to. (Relationship: Profile 1:N Publication)"
+          "description": "Reference to the Profile this blog post belongs to."
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL-friendly slug for the blog post."
         },
         "title": {
           "type": "string",
-          "description": "The title of the article, blog post, or publication."
-        },
-        "url": {
-          "type": "string",
-          "description": "The URL where the publication can be accessed.",
-          "format": "uri"
+          "description": "The title of the blog post."
         },
         "description": {
           "type": "string",
-          "description": "A brief summary or description of the publication."
+          "description": "A short summary of the blog post."
         },
-        "publishedDate": {
+        "date": {
           "type": "string",
-          "description": "The date when the publication was released.",
-          "format": "date"
+          "description": "The publication date of the blog post.",
+          "format": "date-time"
         },
-        "publisher": {
+        "cover_image": {
           "type": "string",
-          "description": "The name of the platform or publisher (e.g., 'Medium', 'Dev.to', 'IEEE')."
+          "description": "URL for the blog post's cover image.",
+          "format": "uri"
         },
-        "displayOrder": {
-          "type": "number",
-          "description": "A numeric value indicating the order in which this publication should be displayed."
+        "content": {
+          "type": "string",
+          "description": "The full content of the blog post in Markdown format."
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
         "id",
         "profileId",
+        "slug",
         "title",
-        "url",
-        "description"
+        "description",
+        "date",
+        "content"
+      ]
+    },
+    "Education": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Education",
+      "type": "object",
+      "description": "Represents a single educational qualification.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Education entity."
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to the Profile this education belongs to."
+        },
+        "institution": {
+          "type": "string",
+          "description": "The name of the educational institution."
+        },
+        "degree": {
+          "type": "string",
+          "description": "The degree or qualification obtained."
+        },
+        "from": {
+          "type": "string",
+          "description": "The start year of the education."
+        },
+        "to": {
+          "type": "string",
+          "description": "The end year of the education."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "Order for displaying education entries."
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "institution",
+        "degree",
+        "from",
+        "to"
       ]
     }
   },
@@ -299,21 +400,41 @@
         }
       },
       {
-        "path": "/profiles/{profileId}/publications/{publicationId}",
+        "path": "/profiles/{profileId}/blogs/{blogId}",
         "definition": {
-          "entityName": "Publication",
+          "entityName": "Blog",
           "schema": {
-            "$ref": "#/backend/entities/Publication"
+            "$ref": "#/backend/entities/Blog"
           },
-          "description": "Stores external article/blog links and descriptions for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These publications are publicly readable but editable only by the profile's 'ownerId'.",
+          "description": "Stores blog posts for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These are publicly readable but editable only by the profile's 'ownerId'.",
           "params": [
             {
               "name": "profileId",
               "description": "Identifier of the parent Profile."
             },
             {
-              "name": "publicationId",
-              "description": "Unique identifier for the publication entry."
+              "name": "blogId",
+              "description": "Unique identifier for the blog post."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/profiles/{profileId}/educations/{educationId}",
+        "definition": {
+          "entityName": "Education",
+          "schema": {
+            "$ref": "#/backend/entities/Education"
+          },
+          "description": "Stores education entries for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "educationId",
+              "description": "Unique identifier for the education entry."
             }
           ]
         }
@@ -335,6 +456,7 @@
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence:** The central strategy for achieving authorization independence (eliminating `get()` calls in security rules) is through denormalization. Each `Profile` document at `/profiles/{profileId}` stores an `ownerId` field, which corresponds to the Firebase Authentication UID of the user who owns that profile. For all subcollections (`socialLinks`, `workExperiences`, `publications`), each document will *also* contain the `ownerId` denormalized from its parent `Profile`. This ensures that security rules for creating, updating, or deleting any subcollection document can directly check `request.auth.uid == resource.data.ownerId` without needing to perform a `get()` operation on the parent `Profile` document. This allows for atomic operations and simplifies rule logic considerably.\n\n**Structural Segregation & QAPs:** All user profiles and their associated sub-data (social links, work experience, publications) are designed to be publicly readable but privately editable by their respective `ownerId`. This means that all documents within `/profiles/{profileId}` and its subcollections (`/profiles/{profileId}/socialLinks`, etc.) share a homogeneous security posture regarding read access (public). This directly supports the Query as Permissions (QAP) principle: since all data in these collections is intended for public consumption, a `list` query will naturally return all documents, and no filtering is performed by security rules for read access. Write access is strictly controlled by the denormalized `ownerId`, ensuring only the profile owner can modify their data.\n\n**Access Modeling:**\n*   **User-Owned Data:** The primary data, `Profile` and its related sub-entities, is structured hierarchically (`/profiles/{profileId}/subcollection/{subDocId}`). This clearly defines ownership and relationships. The `ownerId` field within each document (`Profile`, `SocialLink`, `WorkExperience`, `Publication`) links it to the Firebase Auth `uid`.\n*   **Global Roles (DBAC):** For the administrative dashboard login requirement, a dedicated collection `/admin_users/{userId}` is introduced. The mere existence of a document for a given `userId` in this collection grants administrative privileges. This 'existence over content' approach for roles is simple to implement and highly debuggable in security rules (`exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))`).\n\n**Overall:** This structure prioritizes explicit authorization logic within each document, simplifying security rules and making them easier to test and maintain. The clear separation of public read access from owner-only write access, coupled with the hierarchical pathing, ensures a robust and predictable data model for DevFolio."
+    "reasoning": "This Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence:** The central strategy for achieving authorization independence (eliminating `get()` calls in security rules) is through denormalization. Each `Profile` document at `/profiles/{profileId}` stores an `ownerId` field, which corresponds to the Firebase Authentication UID of the user who owns that profile. For all subcollections (`socialLinks`, `workExperiences`, `blogs`, `educations`), each document will *also* contain the `ownerId` denormalized from its parent `Profile`. This ensures that security rules for creating, updating, or deleting any subcollection document can directly check `request.auth.uid == resource.data.ownerId` without needing to perform a `get()` operation on the parent `Profile` document. This allows for atomic operations and simplifies rule logic considerably.\n\n**Structural Segregation & QAPs:** All user profiles and their associated sub-data (social links, work experience, publications) are designed to be publicly readable but privately editable by their respective `ownerId`. This means that all documents within `/profiles/{profileId}` and its subcollections (`/profiles/{profileId}/socialLinks`, etc.) share a homogeneous security posture regarding read access (public). This directly supports the Query as Permissions (QAP) principle: since all data in these collections is intended for public consumption, a `list` query will naturally return all documents, and no filtering is performed by security rules for read access. Write access is strictly controlled by the denormalized `ownerId`, ensuring only the profile owner can modify their data.\n\n**Access Modeling:**\n*   **User-Owned Data:** The primary data, `Profile` and its related sub-entities, is structured hierarchically (`/profiles/{profileId}/subcollection/{subDocId}`). This clearly defines ownership and relationships. The `ownerId` field within each document (`Profile`, `SocialLink`, `WorkExperience`, `Blog`, `Education`) links it to the Firebase Auth `uid`.\n*   **Global Roles (DBAC):** For the administrative dashboard login requirement, a dedicated collection `/admin_users/{userId}` is introduced. The mere existence of a document for a given `userId` in this collection grants administrative privileges. This 'existence over content' approach for roles is simple to implement and highly debuggable in security rules (`exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))`).\n\n**Overall:** This structure prioritizes explicit authorization logic within each document, simplifying security rules and making them easier to test and maintain. The clear separation of public read access from owner-only write access, coupled with the hierarchical pathing, ensures a robust and predictable data model for DevFolio."
   }
 }
+    
