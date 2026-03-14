@@ -5,6 +5,7 @@ import { Save, Braces, Globe, Search, User, Share2, Loader } from 'lucide-react'
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { ImageUploader } from '../../../components/admin/ImageUploader';
+import { FileUploader } from '../../../components/admin/FileUploader';
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -25,6 +26,8 @@ type Profile = {
   twitterUsername?: string;
   websiteUrl?: string;
   email?: string;
+  profilePhotoUrl?: string;
+  resumeUrl?: string;
 };
 
 
@@ -190,6 +193,21 @@ export default function ManageSettingsPage() {
           {activeTab === 'about' && (
             <div className="space-y-8">
               <h2 className="text-xl font-bold">About Me</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ImageUploader
+                  label="Profile Photo"
+                  currentUrl={profile.profilePhotoUrl}
+                  onUrlChange={(url) => handleImageUrlChange('profilePhotoUrl', url)}
+                  folderPath="profile"
+                />
+                <FileUploader
+                  label="Resume (PDF)"
+                  currentUrl={profile.resumeUrl}
+                  onUrlChange={(url) => handleImageUrlChange('resumeUrl', url)}
+                  folderPath="documents"
+                  accept="application/pdf"
+                />
+              </div>
               <textarea
                 name="aboutMe"
                 value={profile.aboutMe || ''}
