@@ -1,0 +1,340 @@
+{
+  "entities": {
+    "Profile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Profile",
+      "type": "object",
+      "description": "Represents a single DevFolio user profile page, acting as the central hub for all displayed information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Profile entity."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Identifier for the user who owns/manages this profile, from an external authentication system (e.g., Firebase Auth). (Relationship: External User 1:N Profile)"
+        },
+        "githubUsername": {
+          "type": "string",
+          "description": "The GitHub username used to fetch dynamic profile data and repositories."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The name to be displayed on the DevFolio profile, potentially overriding the GitHub name."
+        },
+        "tagline": {
+          "type": "string",
+          "description": "A short, engaging phrase or slogan displayed prominently on the profile."
+        },
+        "aboutMe": {
+          "type": "string",
+          "description": "A personalized introduction or biography for the 'About Me' section."
+        },
+        "email": {
+          "type": "string",
+          "description": "A contact email address for the profile owner.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "An optional contact phone number."
+        },
+        "websiteUrl": {
+          "type": "string",
+          "description": "A link to the profile owner's personal website or portfolio.",
+          "format": "uri"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "description": "An optional link to the profile owner's resume or CV.",
+          "format": "uri"
+        },
+        "socialLinkIds": {
+          "type": "array",
+          "description": "References to SocialLink entities associated with this profile. (Relationship: Profile 1:N SocialLink)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "themeSettings": {
+          "type": "array",
+          "description": "An array of theme setting objects for the profile.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "githubUsername",
+        "displayName",
+        "aboutMe",
+        "email"
+      ]
+    },
+    "SocialLink": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SocialLink",
+      "type": "object",
+      "description": "Represents a single social media or external link to be displayed on a user's DevFolio profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SocialLink entity."
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to the Profile this social link belongs to. (Relationship: Profile 1:N SocialLink)"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The platform or type of the social link (e.g., 'linkedin', 'twitter', 'github', 'custom')."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of the social media profile or external link.",
+          "format": "uri"
+        },
+        "label": {
+          "type": "string",
+          "description": "An optional custom label to display for the link, especially useful for 'custom' platforms."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "A numeric value indicating the order in which this link should be displayed on the profile."
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "platform",
+        "url"
+      ]
+    },
+    "WorkExperience": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkExperience",
+      "type": "object",
+      "description": "Represents a single entry of professional work history for a user's DevFolio profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WorkExperience entity."
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to the Profile this work experience belongs to. (Relationship: Profile 1:N WorkExperience)"
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the company where the experience was gained."
+        },
+        "role": {
+          "type": "string",
+          "description": "The job title or role held at the company."
+        },
+        "location": {
+          "type": "string",
+          "description": "The physical location of the company or role (e.g., 'San Francisco, CA' or 'Remote')."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of the work experience.",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of the work experience. Null if 'isCurrent' is true.",
+          "format": "date"
+        },
+        "isCurrent": {
+          "type": "boolean",
+          "description": "A boolean indicating if this is the user's current work position."
+        },
+        "descriptionPoints": {
+          "type": "array",
+          "description": "An array of strings, each representing a key responsibility or achievement in this role.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "A numeric value indicating the order in which this experience should be displayed."
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "companyName",
+        "role",
+        "startDate",
+        "isCurrent",
+        "descriptionPoints"
+      ]
+    },
+    "Publication": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Publication",
+      "type": "object",
+      "description": "Represents a link to an external article, blog post, or publication associated with a user's DevFolio profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Publication entity."
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to the Profile this publication belongs to. (Relationship: Profile 1:N Publication)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the article, blog post, or publication."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL where the publication can be accessed.",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief summary or description of the publication."
+        },
+        "publishedDate": {
+          "type": "string",
+          "description": "The date when the publication was released.",
+          "format": "date"
+        },
+        "publisher": {
+          "type": "string",
+          "description": "The name of the platform or publisher (e.g., 'Medium', 'Dev.to', 'IEEE')."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "A numeric value indicating the order in which this publication should be displayed."
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "title",
+        "url",
+        "description"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/profiles/{profileId}",
+        "definition": {
+          "entityName": "Profile",
+          "schema": {
+            "$ref": "#/backend/entities/Profile"
+          },
+          "description": "Stores individual user profiles. Documents must include an 'ownerId' field corresponding to the Firebase Auth UID of the user who owns this profile. Profiles are publicly readable, but only the 'ownerId' can create, update, or delete them.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Unique identifier for the user's DevFolio profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/socialLinks/{socialLinkId}",
+        "definition": {
+          "entityName": "SocialLink",
+          "schema": {
+            "$ref": "#/backend/entities/SocialLink"
+          },
+          "description": "Stores social media and external links associated with a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These links are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "socialLinkId",
+              "description": "Unique identifier for the social link."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/workExperiences/{workExperienceId}",
+        "definition": {
+          "entityName": "WorkExperience",
+          "schema": {
+            "$ref": "#/backend/entities/WorkExperience"
+          },
+          "description": "Stores professional work history entries for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These entries are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "workExperienceId",
+              "description": "Unique identifier for the work experience entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/publications/{publicationId}",
+        "definition": {
+          "entityName": "Publication",
+          "schema": {
+            "$ref": "#/backend/entities/Publication"
+          },
+          "description": "Stores external article/blog links and descriptions for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These publications are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "publicationId",
+              "description": "Unique identifier for the publication entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admin_users/{userId}",
+        "definition": {
+          "entityName": "admin_user_role",
+          "schema": {
+            "$ref": "#/backend/entities/Profile"
+          },
+          "description": "A collection used for Database Access Control (DBAC) to define administrative roles. The existence of a document at `/admin_users/{uid}` grants administrative privileges to the user with the corresponding UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of a user who holds an administrative role."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence:** The central strategy for achieving authorization independence (eliminating `get()` calls in security rules) is through denormalization. Each `Profile` document at `/profiles/{profileId}` stores an `ownerId` field, which corresponds to the Firebase Authentication UID of the user who owns that profile. For all subcollections (`socialLinks`, `workExperiences`, `publications`), each document will *also* contain the `ownerId` denormalized from its parent `Profile`. This ensures that security rules for creating, updating, or deleting any subcollection document can directly check `request.auth.uid == resource.data.ownerId` without needing to perform a `get()` operation on the parent `Profile` document. This allows for atomic operations and simplifies rule logic considerably.\n\n**Structural Segregation & QAPs:** All user profiles and their associated sub-data (social links, work experience, publications) are designed to be publicly readable but privately editable by their respective `ownerId`. This means that all documents within `/profiles/{profileId}` and its subcollections (`/profiles/{profileId}/socialLinks`, etc.) share a homogeneous security posture regarding read access (public). This directly supports the Query as Permissions (QAP) principle: since all data in these collections is intended for public consumption, a `list` query will naturally return all documents, and no filtering is performed by security rules for read access. Write access is strictly controlled by the denormalized `ownerId`, ensuring only the profile owner can modify their data.\n\n**Access Modeling:**\n*   **User-Owned Data:** The primary data, `Profile` and its related sub-entities, is structured hierarchically (`/profiles/{profileId}/subcollection/{subDocId}`). This clearly defines ownership and relationships. The `ownerId` field within each document (`Profile`, `SocialLink`, `WorkExperience`, `Publication`) links it to the Firebase Auth `uid`.\n*   **Global Roles (DBAC):** For the administrative dashboard login requirement, a dedicated collection `/admin_users/{userId}` is introduced. The mere existence of a document for a given `userId` in this collection grants administrative privileges. This 'existence over content' approach for roles is simple to implement and highly debuggable in security rules (`exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))`).\n\n**Overall:** This structure prioritizes explicit authorization logic within each document, simplifying security rules and making them easier to test and maintain. The clear separation of public read access from owner-only write access, coupled with the hierarchical pathing, ensures a robust and predictable data model for DevFolio."
+  }
+}
