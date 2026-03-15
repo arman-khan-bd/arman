@@ -338,6 +338,35 @@
         "from",
         "to"
       ]
+    },
+    "Skill": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Skill",
+      "type": "object",
+      "description": "Represents a single technology or skill in the tech stack.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Skill entity."
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to the Profile this skill belongs to."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the skill (e.g., 'React.js')."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "A numeric value indicating the order in which this skill should be displayed."
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "name"
+      ]
     }
   },
   "auth": {
@@ -424,7 +453,7 @@
           ]
         }
       },
-       {
+      {
         "path": "/profiles/{profileId}/educations/{educationId}",
         "definition": {
           "entityName": "Education",
@@ -440,6 +469,26 @@
             {
               "name": "educationId",
               "description": "Unique identifier for the education entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/skills/{skillId}",
+        "definition": {
+          "entityName": "Skill",
+          "schema": {
+            "$ref": "#/backend/entities/Skill"
+          },
+          "description": "Stores tech stack skills for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "skillId",
+              "description": "Unique identifier for the skill."
             }
           ]
         }
