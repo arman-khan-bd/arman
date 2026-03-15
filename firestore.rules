@@ -2,11 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This matches ANY document in your database. 
-    // It allows any authenticated user to read or write any data.
-    // This is useful for development but should be replaced with more
-    // restrictive rules before going to production.
+    // This matches ANY document in your database
     match /{document=**} {
+      // Allows access if the user is logged in, regardless of email verification
       allow read, write: if request.auth != null;
     }
   }
