@@ -1,7 +1,7 @@
 
 [
   {
-    "origin": ["https://6000-firebase-studio-1773502811643.cluster-52r6vzs3ujeoctkkxpjif3x34a.cloudworkstations.dev", "http://localhost:3000","https://armankhan.vercel.app/", "https://armankhan.me","https://www.armankhan.me"],
+    "origin": ["https://6000-firebase-studio-1773502811643.cluster-52r6vzs3ujeoctkkxpjif3x34a.cloudworkstations.dev", "http://localhost:3000","https://armankhan.vercel.app", "https://armankhan.me","https://www.armankhan.me"],
     "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "responseHeader": ["Content-Type", "x-goog-resumable", "Authorization"],
     "maxAgeSeconds": 3600
