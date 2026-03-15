@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Send } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 
 interface Comment {
@@ -24,40 +24,60 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
   const firestore = useFirestore();
   const [newComment, setNewComment] = useState({ fullName: '', email: '', text: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const commentsQuery = useMemoFirebase(() => {
-    if (!profileId || !blogId) return null;
-    return query(
-      collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`),
-      orderBy('createdAt', 'desc')
-    );
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!profileId || !blogId || !firestore) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const commentsQuery = query(
+          collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`),
+          orderBy('createdAt', 'desc')
+        );
+        const snapshot = await getDocs(commentsQuery);
+        const commentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Comment[];
+        setComments(commentsData);
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchComments();
   }, [profileId, blogId, firestore]);
-
-  const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewComment(prev => ({ ...prev, [name]: value }));
-  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.text.trim() || !newComment.fullName.trim() || !profileId || !firestore) return;
     
     setIsSubmitting(true);
+    const createdAt = new Date().toISOString();
     const commentData = {
       ...newComment,
       profileId,
       blogId,
       blogSlug,
-      createdAt: new Date().toISOString(),
+      createdAt,
       ownerId: profileId, // for rules
     };
+
+    // Optimistic UI update
+    const optimisticComment: Comment = {
+      id: `optimistic-${Date.now()}`,
+      fullName: newComment.fullName,
+      text: newComment.text,
+      createdAt: createdAt,
+    };
+    setComments(prev => [optimisticComment, ...prev]);
 
     const commentsCollection = collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`);
     
     try {
-      // Not awaiting to keep UI non-blocking
       addDocumentNonBlocking(commentsCollection, commentData);
     } finally {
       setNewComment({ fullName: '', email: '', text: '' });
@@ -135,5 +155,3 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
     </div>
   );
 };
-
-    
