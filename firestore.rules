@@ -35,22 +35,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == profileId;
     }
 
-    /**
-     * Validates that the ownerId and profileId on a new subcollection document are correct.
-     * Ensures the new document is linked to the parent profile and owned by the creator.
-     */
-    function hasValidSubcollectionDataOnCreate(profileId) {
-      return request.resource.data.ownerId == request.auth.uid && request.resource.data.profileId == profileId;
-    }
-
-    /**
-     * Enforces that the ownership and parent links on a subcollection document cannot be changed.
-     */
-    function areSubcollectionLinksImmutableOnUpdate() {
-      return request.resource.data.ownerId == resource.data.ownerId && request.resource.data.profileId == resource.data.profileId;
-    }
-
-
     // --- Collection Rules ---
 
     /**
@@ -59,17 +43,11 @@ service cloud.firestore {
      */
     match /profiles/{profileId} {
       allow read: if true;
-      allow create: if isProfileOwner(profileId);
-      allow update: if isProfileOwner(profileId);
-      allow delete: if isProfileOwner(profileId);
+      allow create, update, delete: if isProfileOwner(profileId);
 
       // --- Subcollection Rules ---
 
-      // Blogs, Projects, Skills, Experience, Education: Public read, owner write.
-      match /blogs/{blogId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
+      // Projects, Skills, Experience, Education: Public read, owner write.
       match /projects/{projectId} {
         allow read: if true;
         allow create, update, delete: if isProfileOwner(profileId);
@@ -86,16 +64,25 @@ service cloud.firestore {
         allow read: if true;
         allow create, update, delete: if isProfileOwner(profileId);
       }
-
+      
       /**
-       * @description Special rules for Comments.
-       * Anyone can create and read comments. Only the profile owner can delete them.
+       * @description Rules for Blog posts and their nested Comments.
        */
-      match /comments/{commentId} {
+      match /blogs/{blogId} {
         allow read: if true;
-        allow create: if request.resource.data.profileId == profileId; // Allow public creation
-        allow update: if false; // Comments are immutable
-        allow delete: if isProfileOwner(profileId); // Owner can moderate
+        allow create, update, delete: if isProfileOwner(profileId);
+
+        /**
+         * @description Special rules for Comments nested under a Blog.
+         * Anyone can create and read comments. Only the profile owner can delete them.
+         */
+        match /comments/{commentId} {
+          allow read: if true;
+          // Allow public creation, but ensure it's for the correct blog and profile.
+          allow create: if request.resource.data.profileId == profileId && request.resource.data.blogId == blogId;
+          allow update: if false; // Comments are immutable
+          allow delete: if isProfileOwner(profileId); // Owner can moderate
+        }
       }
 
       /**
@@ -118,3 +105,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Send } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 
 interface Comment {
@@ -16,22 +16,22 @@ interface Comment {
 
 interface CommentSectionProps {
   profileId: string;
+  blogId: string;
   blogSlug: string;
 }
 
-export const CommentSection = ({ profileId, blogSlug }: CommentSectionProps) => {
+export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionProps) => {
   const firestore = useFirestore();
   const [newComment, setNewComment] = useState({ fullName: '', email: '', text: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const commentsQuery = useMemoFirebase(() => {
-    if (!profileId || !blogSlug) return null;
+    if (!profileId || !blogId) return null;
     return query(
-      collection(firestore, `profiles/${profileId}/comments`),
-      where('blogSlug', '==', blogSlug),
+      collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`),
       orderBy('createdAt', 'desc')
     );
-  }, [profileId, blogSlug, firestore]);
+  }, [profileId, blogId, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
 
@@ -42,18 +42,19 @@ export const CommentSection = ({ profileId, blogSlug }: CommentSectionProps) => 
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.text.trim() || !newComment.fullName.trim() || !profileId || !commentsQuery || !firestore) return;
+    if (!newComment.text.trim() || !newComment.fullName.trim() || !profileId || !firestore) return;
     
     setIsSubmitting(true);
     const commentData = {
       ...newComment,
       profileId,
+      blogId,
       blogSlug,
       createdAt: new Date().toISOString(),
       ownerId: profileId, // for rules
     };
 
-    const commentsCollection = collection(firestore, `profiles/${profileId}/comments`);
+    const commentsCollection = collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`);
     
     try {
       // Not awaiting to keep UI non-blocking
@@ -134,3 +135,5 @@ export const CommentSection = ({ profileId, blogSlug }: CommentSectionProps) => 
     </div>
   );
 };
+
+    

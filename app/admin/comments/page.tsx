@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, doc, query, orderBy, where } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Trash2, MessageSquare, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ interface Comment {
   text: string;
   createdAt: string;
   blogSlug: string;
+  blogId: string;
+  profileId: string;
 }
 
 export default function ManageCommentsPage() {
@@ -22,14 +24,14 @@ export default function ManageCommentsPage() {
 
   const commentsQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(firestore, `profiles/${user.uid}/comments`), orderBy('createdAt', 'desc'));
+    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid), orderBy('createdAt', 'desc'));
   }, [user, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
 
-  const handleDelete = (commentId: string) => {
+  const handleDelete = (comment: Comment) => {
     if (!user) return;
-    const commentRef = doc(firestore, `profiles/${user.uid}/comments/${commentId}`);
+    const commentRef = doc(firestore, `profiles/${comment.profileId}/blogs/${comment.blogId}/comments/${comment.id}`);
     deleteDocumentNonBlocking(commentRef);
   };
 
@@ -65,7 +67,7 @@ export default function ManageCommentsPage() {
                         <Link href={`/blogs/${comment.blogSlug}`} target="_blank" className="btn btn-sm btn-ghost">
                             <ExternalLink size={16} /> View Post
                         </Link>
-                        <button onClick={() => handleDelete(comment.id)} className="btn btn-sm btn-error">
+                        <button onClick={() => handleDelete(comment)} className="btn btn-sm btn-error">
                             <Trash2 size={16} />
                         </button>
                     </div>
@@ -78,3 +80,5 @@ export default function ManageCommentsPage() {
     </div>
   );
 }
+
+    

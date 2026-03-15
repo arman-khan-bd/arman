@@ -136,7 +136,7 @@ export default function BlogDetailsPage() {
                 <ReactMarkdown>{blog.content}</ReactMarkdown>
               </article>
               
-              {profileId && blog.slug && <CommentSection profileId={profileId} blogSlug={blog.slug} />}
+              {profileId && blog.id && blog.slug && <CommentSection profileId={profileId} blogId={blog.id} blogSlug={blog.slug} />}
             </motion.div>
           </div>
 
@@ -151,3 +151,5 @@ export default function BlogDetailsPage() {
     </div>
   );
 }
+
+    
