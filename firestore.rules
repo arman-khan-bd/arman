@@ -1,121 +1,13 @@
-/**
- * Core Philosophy:
- * This ruleset enforces a "Public Read, Owner-Only Write" security model for most profile data.
- * All portfolio content is publicly visible, but modification is strictly limited to the authenticated
- * user who owns that profile. Specific collections like 'comments' and 'orders' have unique rules
- * to allow public creation while maintaining owner control.
- *
- * Key Security Decisions:
- * - Public Read Access: Most profile-related data is publicly readable.
- * - Strict Ownership for Writes: Write operations are gated by matching the user's UID against the
- *   `profileId` or a denormalized `ownerId`.
- * - Authorization Independence: The `ownerId` is denormalized (copied) onto subcollection documents
- *   to avoid slow and costly `get()` calls in security rules.
- * - Explicit Subcollection Rules: Each subcollection (`blogs`, `projects`, etc.) has its
- *   own specific rule block. Collection group queries have their own top-level rule.
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Helper Functions ---
-
-    /**
-     * Checks if a user is authenticated.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * Checks if the currently authenticated user's UID matches the profileId from the URL.
-     * This is the primary check for ownership on direct subcollections.
-     */
-    function isProfileOwner(profileId) {
-      return isSignedIn() && request.auth.uid == profileId;
-    }
-
-    // --- Profile & Subcollection Rules ---
-
-    /**
-     * @description Rules for user profile documents and their direct subcollections.
-     * @path /profiles/{profileId}
-     */
-    match /profiles/{profileId} {
-      allow read: if true;
-      allow create, update, delete: if isProfileOwner(profileId);
-
-      // Projects, Skills, Experience, Education: Public read, owner write.
-      match /projects/{projectId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
-      match /skills/{skillId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
-      match /workExperiences/{experienceId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
-      match /educations/{educationId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
-      
-      /**
-       * @description Rules for Blog posts. Comments are handled in a separate top-level rule.
-       */
-      match /blogs/{blogId} {
-        allow read: if true;
-        allow create, update, delete: if isProfileOwner(profileId);
-      }
-
-      /**
-       * @description Special rules for Orders.
-       * Anyone can create an order. Only the profile owner can read or delete them.
-       */
-      match /orders/{orderId} {
-        allow read, delete: if isProfileOwner(profileId);
-        allow create: if request.resource.data.profileId == profileId;
-        allow update: if isProfileOwner(profileId);
-      }
-
-      /**
-       * @description Rules for Visitor logs.
-       * Admin can read/delete. Creation is handled by the client.
-       */
-      match /visitors/{visitorId} {
-        allow read, delete: if isProfileOwner(profileId);
-        allow create: if request.resource.data.profileId == profileId;
-        allow update: if false;
-      }
-    }
-
-    /**
-     * @description Rules for the 'comments' collection group.
-     * This top-level rule with a wildcard path is necessary to allow collection group queries.
-     */
-    match /{path=**}/comments/{commentId} {
-      // Allow public read access to all comments.
-      allow read: if true;
-      
-      // Allow anyone to create a comment, provided required fields are present.
-      allow create: if request.resource.data.profileId != null && request.resource.data.blogId != null;
-
-      // Do not allow comments to be updated.
-      allow update: if false;
-
-      // Allow the profile owner to delete comments.
-      allow delete: if request.auth != null && request.auth.uid == resource.data.profileId;
-    }
-
-    /**
-     * @description Rules for the admin roles collection. Access is highly restricted.
-     * @path /admin_users/{userId}
-     */
-    match /admin_users/{userId} {
-      allow read, write: if false; // Disallow all client access for security.
+    // This matches ANY document in your database. 
+    // It allows any authenticated user to read or write any data.
+    // This is useful for development but should be replaced with more
+    // restrictive rules before going to production.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
