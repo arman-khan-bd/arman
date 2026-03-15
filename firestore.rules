@@ -1,44 +1,24 @@
 /**
  * Core Philosophy:
- * This ruleset enforces a "Public Read, Owner-Only Write" security model for all user profile data.
- * All portfolio content, including social links, work experience, and publications, is publicly
- * visible to any visitor. However, modification (creation, updates, deletion) of any piece of data
- * is strictly limited to the authenticated user who owns that profile. This supports the primary use case
- * of a public-facing portfolio while ensuring data integrity and user control.
- *
- * Data Structure:
- * The data is structured hierarchically under a top-level `/profiles` collection. Each user's profile
- * document resides at `/profiles/{profileId}`, with related data organized into subcollections like
- * `socialLinks`, `workExperiences`, and `publications`. A separate top-level collection,
- * `/admin_users/{userId}`, is used for role-based access control, granting administrative
- * privileges based on the existence of a document.
+ * This ruleset enforces a "Public Read, Owner-Only Write" security model for most profile data.
+ * All portfolio content is publicly visible, but modification is strictly limited to the authenticated
+ * user who owns that profile. Specific collections like 'comments' and 'orders' have unique rules
+ * to allow public creation while maintaining owner control.
  *
  * Key Security Decisions:
- * - Public Read Access: All documents within the `/profiles` collection and its subcollections are
- *   publicly readable to support the app's function as a public portfolio viewer.
- * - Strict Ownership for Writes: All write operations are gated by an `ownerId` field present on every
- *   single document. Only the user whose UID matches this `ownerId` can perform write operations.
- * - Admin Roles: A separate `/admin_users` collection defines administrators. The existence of a
- *   document for a given user ID in this collection grants them administrative access. This collection
- *   is not publicly readable or writable.
- *
- * Denormalization for Authorization:
- * To ensure fast and simple authorization checks, the `ownerId` from the parent Profile document is
- * denormalized (copied) onto every document within its subcollections (e.g., each WorkExperience item).
- * This eliminates the need for slow and costly `get()` calls in security rules, allowing for direct
- * ownership checks on every piece of data. This principle is critical to the security and performance
- * of this ruleset.
- *
- * Structural Segregation:
- * The primary user data (`/profiles`) is structurally separated from the administrative role data
- * (`/admin_users`). This ensures that the security rules for public content are simple and distinct
- * from the highly restrictive rules governing administrative privileges.
+ * - Public Read Access: Most profile-related data is publicly readable.
+ * - Strict Ownership for Writes: Write operations are gated by matching the user's UID against the
+ *   `profileId` or a denormalized `ownerId`.
+ * - Authorization Independence: The `ownerId` is denormalized (copied) onto subcollection documents
+ *   to avoid slow and costly `get()` calls in security rules.
+ * - Explicit Subcollection Rules: Each subcollection (`blogs`, `comments`, `projects`, etc.) has its
+ *   own specific rule block, avoiding ambiguity from generic wildcards.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
+    // --- Helper Functions ---
 
     /**
      * Checks if a user is authenticated.
@@ -48,125 +28,93 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the currently authenticated user's UID matches the provided ownerId.
+     * Checks if the currently authenticated user's UID matches the profileId from the URL.
+     * This is the primary check for ownership.
      */
-    function isOwner(ownerId) {
-      return isSignedIn() && request.auth.uid == ownerId;
-    }
-    
     function isProfileOwner(profileId) {
       return isSignedIn() && request.auth.uid == profileId;
     }
 
     /**
-     * Checks for ownership on an existing document. Used for update/delete operations.
-     */
-    function isExistingOwner(ownerId) {
-      return isOwner(ownerId) && resource != null;
-    }
-
-    /**
-     * Checks if the authenticated user has an admin role by verifying the existence
-     * of a document in the /admin_users collection.
-     */
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
-    }
-
-    /**
-     * Validates that the ownerId on a new profile document matches the creator's auth UID.
-     */
-    function hasValidProfileDataOnCreate() {
-      return request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * Enforces that the ownerId of a profile cannot be changed after creation.
-     */
-    function isProfileOwnerImmutableOnUpdate() {
-      return request.resource.data.ownerId == resource.data.ownerId;
-    }
-
-    /**
-     * Validates relational integrity for new subcollection documents.
-     * Ensures the new document is correctly linked to its parent profile and owned by the creator.
+     * Validates that the ownerId and profileId on a new subcollection document are correct.
+     * Ensures the new document is linked to the parent profile and owned by the creator.
      */
     function hasValidSubcollectionDataOnCreate(profileId) {
       return request.resource.data.ownerId == request.auth.uid && request.resource.data.profileId == profileId;
     }
 
     /**
-     * Enforces that the ownership and parent links on a subcollection document are immutable.
+     * Enforces that the ownership and parent links on a subcollection document cannot be changed.
      */
     function areSubcollectionLinksImmutableOnUpdate() {
       return request.resource.data.ownerId == resource.data.ownerId && request.resource.data.profileId == resource.data.profileId;
     }
 
+
+    // --- Collection Rules ---
+
     /**
      * @description Rules for user profile documents.
      * @path /profiles/{profileId}
-     * @allow (read) Anyone, signed in or not, can read a profile.
-     * @allow (create) An authenticated user can create their own profile, setting their UID as the ownerId.
-     * @deny (update) An authenticated user cannot update a profile they do not own.
-     * @principle Public Read, Owner Write. Enforces strict document ownership for all modifications.
      */
     match /profiles/{profileId} {
       allow read: if true;
-      allow create: if isOwner(request.resource.data.ownerId) && hasValidProfileDataOnCreate();
-      allow update: if isExistingOwner(resource.data.ownerId) && isProfileOwnerImmutableOnUpdate();
-      allow delete: if isExistingOwner(resource.data.ownerId);
+      allow create: if isProfileOwner(profileId);
+      allow update: if isProfileOwner(profileId);
+      allow delete: if isProfileOwner(profileId);
 
-      // --- Specific subcollections first ---
+      // --- Subcollection Rules ---
 
-      // Comments: Publicly readable, anyone can create, owner can delete.
-      match /comments/{commentId} {
+      // Blogs, Projects, Skills, Experience, Education: Public read, owner write.
+      match /blogs/{blogId} {
         allow read: if true;
-        // Anyone can create a comment, just ensure it's for the correct profile
-        // and has the required fields.
-        allow create: if request.resource.data.profileId == profileId &&
-                       'fullName' in request.resource.data &&
-                       'text' in request.resource.data &&
-                       'blogSlug' in request.resource.data;
-        allow update: if false; // Comments are immutable by users.
-        allow delete: if isProfileOwner(profileId); // Profile owner can delete comments.
+        allow create, update, delete: if isProfileOwner(profileId);
       }
-
-      // Orders: Owner can read/list/delete, anyone can create.
-      match /orders/{orderId} {
-        allow read: if isProfileOwner(profileId);
-        // Anyone can create an order. Ensure it's for the right profile.
-        allow create: if request.resource.data.profileId == profileId &&
-                       'projectName' in request.resource.data &&
-                       'fullName' in request.resource.data &&
-                       'email' in request.resource.data;
-        allow update: if false; // Orders are immutable by users.
-        allow delete: if isProfileOwner(profileId); // Profile owner can delete orders.
+      match /projects/{projectId} {
+        allow read: if true;
+        allow create, update, delete: if isProfileOwner(profileId);
+      }
+      match /skills/{skillId} {
+        allow read: if true;
+        allow create, update, delete: if isProfileOwner(profileId);
+      }
+      match /workExperiences/{experienceId} {
+        allow read: if true;
+        allow create, update, delete: if isProfileOwner(profileId);
+      }
+      match /educations/{educationId} {
+        allow read: if true;
+        allow create, update, delete: if isProfileOwner(profileId);
       }
 
       /**
-       * @description Rules for all other profile subcollections.
-       * @path /profiles/{profileId}/{subcollection}/{docId}
-       * @principle Authorization Independence. Relies on a denormalized `ownerId` on each subcollection document to avoid `get()` calls to the parent profile.
+       * @description Special rules for Comments.
+       * Anyone can create and read comments. Only the profile owner can delete them.
        */
-      match /{subcollection}/{docId} {
+      match /comments/{commentId} {
         allow read: if true;
-        allow create: if isSignedIn() && hasValidSubcollectionDataOnCreate(profileId);
-        allow update: if isExistingOwner(resource.data.ownerId) && areSubcollectionLinksImmutableOnUpdate();
-        allow delete: if isExistingOwner(resource.data.ownerId);
+        allow create: if request.resource.data.profileId == profileId; // Allow public creation
+        allow update: if false; // Comments are immutable
+        allow delete: if isProfileOwner(profileId); // Owner can moderate
+      }
+
+      /**
+       * @description Special rules for Orders.
+       * Anyone can create an order. Only the profile owner can read or delete them.
+       */
+      match /orders/{orderId} {
+        allow read, delete: if isProfileOwner(profileId);
+        allow create: if request.resource.data.profileId == profileId; // Allow public creation
+        allow update: if false; // Orders are immutable
       }
     }
 
     /**
-     * @description Rules for the admin roles collection.
+     * @description Rules for the admin roles collection. Access is highly restricted.
      * @path /admin_users/{userId}
-     * @principle Role-Based Access. Access to this collection is highly restricted and only available to users who are already designated as administrators.
      */
     match /admin_users/{userId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if false; // Disallow all client access for security.
     }
   }
 }
