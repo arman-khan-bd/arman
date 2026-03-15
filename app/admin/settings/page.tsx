@@ -5,6 +5,9 @@ import { Save, Braces, Globe, Search, User, Share2, Loader } from 'lucide-react'
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { gitprofileConfig } from '../../../gitprofile.config';
+import { ImageUploader } from '../../../components/admin/ImageUploader';
+import { FileUploader } from '../../../components/admin/FileUploader';
+
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -62,6 +65,10 @@ export default function ManageSettingsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile(prev => prev ? { ...prev, [name]: value } : null);
+  };
+  
+  const handleUrlChange = (name: keyof Profile, url: string | null) => {
+    setProfile(prev => prev ? { ...prev, [name]: url } : null);
   };
 
   const handleSaveChanges = async () => {
@@ -136,18 +143,24 @@ export default function ManageSettingsPage() {
             <div className="space-y-8">
               <h2 className="text-xl font-bold">Branding</h2>
               <div className="space-y-4">
-                <div>
-                    <label className="text-sm font-bold block mb-2">Logo Image URL</label>
-                    <input type="text" name="logoImageUrl" value={profile.logoImageUrl || ''} onChange={handleInputChange} placeholder="https://example.com/logo.png" className={inputClass} />
-                </div>
-                <div>
-                    <label className="text-sm font-bold block mb-2">Favicon URL (.ico, .svg, .png)</label>
-                    <input type="text" name="faviconUrl" value={profile.faviconUrl || ''} onChange={handleInputChange} placeholder="https://example.com/favicon.ico" className={inputClass} />
-                </div>
-                <div>
-                    <label className="text-sm font-bold block mb-2">Social Share Photo URL</label>
-                    <input type="text" name="socialSharePhotoUrl" value={profile.socialSharePhotoUrl || ''} onChange={handleInputChange} placeholder="https://example.com/social.png" className={inputClass} />
-                </div>
+                 <ImageUploader
+                    label="Logo Image"
+                    currentUrl={profile.logoImageUrl}
+                    onUrlChange={(url) => handleUrlChange('logoImageUrl', url)}
+                    folderPath="branding"
+                  />
+                  <ImageUploader
+                    label="Favicon"
+                    currentUrl={profile.faviconUrl}
+                    onUrlChange={(url) => handleUrlChange('faviconUrl', url)}
+                    folderPath="branding"
+                  />
+                  <ImageUploader
+                    label="Social Share Photo"
+                    currentUrl={profile.socialSharePhotoUrl}
+                    onUrlChange={(url) => handleUrlChange('socialSharePhotoUrl', url)}
+                    folderPath="branding"
+                  />
               </div>
             </div>
           )}
@@ -186,14 +199,19 @@ export default function ManageSettingsPage() {
              <div className="space-y-8">
               <h2 className="text-xl font-bold">About Me</h2>
               <div className="space-y-4">
-                <div>
-                    <label className="text-sm font-bold block mb-2">Profile Photo URL</label>
-                    <input type="text" name="profilePhotoUrl" value={profile.profilePhotoUrl || ''} onChange={handleInputChange} placeholder="https://example.com/profile.png" className={inputClass} />
-                </div>
-                <div>
-                    <label className="text-sm font-bold block mb-2">Resume URL (PDF)</label>
-                    <input type="text" name="resumeUrl" value={profile.resumeUrl || ''} onChange={handleInputChange} placeholder="https://example.com/resume.pdf" className={inputClass} />
-                </div>
+                <ImageUploader
+                  label="Profile Photo"
+                  currentUrl={profile.profilePhotoUrl}
+                  onUrlChange={(url) => handleUrlChange('profilePhotoUrl', url)}
+                  folderPath="about"
+                />
+                <FileUploader
+                  label="Resume (PDF)"
+                  currentUrl={profile.resumeUrl}
+                  onUrlChange={(url) => handleUrlChange('resumeUrl', url)}
+                  folderPath="resumes"
+                  accept="application/pdf"
+                />
                 <textarea
                   name="aboutMe"
                   value={profile.aboutMe || ''}
