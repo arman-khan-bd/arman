@@ -105,14 +105,13 @@ service cloud.firestore {
     /**
      * @description Rules for user profile documents.
      * @path /profiles/{profileId}
-     * @allow (get) Anyone, signed in or not, can read a profile.
+     * @allow (read) Anyone, signed in or not, can read a profile.
      * @allow (create) An authenticated user can create their own profile, setting their UID as the ownerId.
      * @deny (update) An authenticated user cannot update a profile they do not own.
      * @principle Public Read, Owner Write. Enforces strict document ownership for all modifications.
      */
     match /profiles/{profileId} {
-      allow get: if true;
-      allow list: if true;
+      allow read: if true;
       allow create: if isOwner(request.resource.data.ownerId) && hasValidProfileDataOnCreate();
       allow update: if isExistingOwner(resource.data.ownerId) && isProfileOwnerImmutableOnUpdate();
       allow delete: if isExistingOwner(resource.data.ownerId);
@@ -121,8 +120,7 @@ service cloud.firestore {
 
       // Comments: Publicly readable, anyone can create, owner can delete.
       match /comments/{commentId} {
-        allow get: if true;
-        allow list: if true;
+        allow read: if true;
         // Anyone can create a comment, just ensure it's for the correct profile
         // and has the required fields.
         allow create: if request.resource.data.profileId == profileId &&
@@ -135,8 +133,7 @@ service cloud.firestore {
 
       // Orders: Owner can read/list/delete, anyone can create.
       match /orders/{orderId} {
-        allow get: if isProfileOwner(profileId);
-        allow list: if isProfileOwner(profileId);
+        allow read: if isProfileOwner(profileId);
         // Anyone can create an order. Ensure it's for the right profile.
         allow create: if request.resource.data.profileId == profileId &&
                        'projectName' in request.resource.data &&
@@ -152,8 +149,7 @@ service cloud.firestore {
        * @principle Authorization Independence. Relies on a denormalized `ownerId` on each subcollection document to avoid `get()` calls to the parent profile.
        */
       match /{subcollection}/{docId} {
-        allow get: if true;
-        allow list: if true;
+        allow read: if true;
         allow create: if isSignedIn() && hasValidSubcollectionDataOnCreate(profileId);
         allow update: if isExistingOwner(resource.data.ownerId) && areSubcollectionLinksImmutableOnUpdate();
         allow delete: if isExistingOwner(resource.data.ownerId);
