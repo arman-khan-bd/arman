@@ -1,31 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BlogCard } from '../../components/BlogCard';
 import { motion } from 'motion/react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useFirestore } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { gitprofileConfig } from '../../gitprofile.config';
 
 
 export default function AllBlogsPage() {
-  const [profileId, setProfileId] = useState<string | null>(null);
-  const firestore = useFirestore();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
-        const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
-        if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
-        }
-      }
-    };
-    fetchProfile();
-  }, [firestore]);
+  const profileId = gitprofileConfig.github.username;
   
   return (
     <div className="min-h-screen bg-base-100 pb-20">

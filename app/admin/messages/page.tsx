@@ -5,6 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNo
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Trash2, Mail, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 interface Message {
   id: string;
@@ -19,25 +20,26 @@ interface Message {
 export default function ManageMessagesPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const profileId = gitprofileConfig.github.username;
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `profiles/${user.uid}/messages`), orderBy('createdAt', 'desc'));
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return query(collection(firestore, `profiles/${profileId}/messages`), orderBy('createdAt', 'desc'));
+  }, [firestore, profileId]);
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
 
   const handleDelete = (messageId: string) => {
-    if (!user) return;
+    if (!firestore) return;
     if (window.confirm('Are you sure you want to delete this message?')) {
-        const messageRef = doc(firestore, `profiles/${user.uid}/messages/${messageId}`);
+        const messageRef = doc(firestore, `profiles/${profileId}/messages/${messageId}`);
         deleteDocumentNonBlocking(messageRef);
     }
   };
   
   const toggleReadStatus = (messageId: string, currentStatus: boolean) => {
-    if (!user) return;
-    const messageRef = doc(firestore, `profiles/${user.uid}/messages/${messageId}`);
+    if (!firestore) return;
+    const messageRef = doc(firestore, `profiles/${profileId}/messages/${messageId}`);
     updateDocumentNonBlocking(messageRef, { isRead: !currentStatus });
   };
 

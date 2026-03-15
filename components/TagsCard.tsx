@@ -3,19 +3,23 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Tag } from 'lucide-react';
 import { useFirestore } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 
 interface BlogForTags {
   tags: string[];
 }
 
-export const TagsCard = () => {
+interface TagsCardProps {
+  profileId: string | null;
+}
+
+export const TagsCard = ({ profileId }: TagsCardProps) => {
   const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (!firestore) {
+    if (!firestore || !profileId) {
       setIsLoading(false);
       return;
     }
@@ -23,18 +27,11 @@ export const TagsCard = () => {
     const fetchBlogsForTags = async () => {
       setIsLoading(true);
       try {
-        const profilesCollection = collection(firestore, 'profiles');
-        const profileQuery = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(profileQuery);
-        
-        if (!profileSnapshot.empty) {
-          const profileId = profileSnapshot.docs[0].id;
-          const blogsQuery = query(collection(firestore, `profiles/${profileId}/blogs`));
-          const blogsSnapshot = await getDocs(blogsQuery);
-          const blogsData = blogsSnapshot.docs.map(doc => doc.data()) as BlogForTags[];
-          const allTags = blogsData.flatMap(blog => blog.tags || []);
-          setTags([...new Set(allTags)]);
-        }
+        const blogsQuery = query(collection(firestore, `profiles/${profileId}/blogs`));
+        const blogsSnapshot = await getDocs(blogsQuery);
+        const blogsData = blogsSnapshot.docs.map(doc => doc.data()) as BlogForTags[];
+        const allTags = blogsData.flatMap(blog => blog.tags || []);
+        setTags([...new Set(allTags)]);
       } catch (e) {
         console.error("Error fetching tags:", e);
       } finally {
@@ -42,7 +39,7 @@ export const TagsCard = () => {
       }
     };
     fetchBlogsForTags();
-  }, [firestore]);
+  }, [firestore, profileId]);
 
 
   if (isLoading) {

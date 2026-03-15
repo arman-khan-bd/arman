@@ -38,7 +38,7 @@ export const OrderModal = ({ isOpen, onClose, projectName, profileId }: OrderMod
 
     const orderData = {
       profileId,
-      ownerId: profileId,
+      // No ownerId here as this is a public action. Rules will handle auth.
       projectName,
       isCustom: isCustomizing,
       description: isCustomizing ? description : 'No customization requested',

@@ -35,11 +35,12 @@ export default function ManageBlogsPage() {
   const firestore = useFirestore();
   const [newBlog, setNewBlog] = useState(initialBlogState);
   const [isAdding, setIsAdding] = useState(false);
+  const profileId = gitprofileConfig.github.username;
 
   const blogsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/blogs`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/blogs`);
+  }, [firestore, profileId]);
 
   const { data: blogs, isLoading } = useCollection(blogsQuery);
 
@@ -67,7 +68,7 @@ export default function ManageBlogsPage() {
       date: new Date().toISOString(),
       categories: newBlog.categories.split(',').map(s => s.trim()).filter(Boolean),
       tags: newBlog.tags.split(',').map(s => s.trim()).filter(Boolean),
-      profileId: user.uid,
+      profileId: profileId,
       ownerId: user.uid,
     };
     
@@ -80,8 +81,8 @@ export default function ManageBlogsPage() {
   };
 
   const handleDeleteBlog = (blogId: string) => {
-    if (!user) return;
-    const blogRef = doc(firestore, `profiles/${user.uid}/blogs/${blogId}`);
+    if (!firestore) return;
+    const blogRef = doc(firestore, `profiles/${profileId}/blogs/${blogId}`);
     deleteDocumentNonBlocking(blogRef);
   };
   
@@ -155,4 +156,3 @@ export default function ManageBlogsPage() {
     </div>
   );
 }
-    

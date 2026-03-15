@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 const initialEducationState = {
     degree: '',
@@ -19,11 +20,12 @@ export default function ManageEducationPage() {
   const firestore = useFirestore();
   const [newEducation, setNewEducation] = useState(initialEducationState);
   const [isAdding, setIsAdding] = useState(false);
+  const profileId = gitprofileConfig.github.username;
 
   const educationsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/educations`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/educations`);
+  }, [firestore, profileId]);
 
   const { data: educations, isLoading } = useCollection(educationsQuery);
 
@@ -39,7 +41,7 @@ export default function ManageEducationPage() {
     setIsAdding(true);
     const educationData = {
       ...newEducation,
-      profileId: user.uid,
+      profileId: profileId,
       ownerId: user.uid,
     };
     
@@ -52,8 +54,8 @@ export default function ManageEducationPage() {
   };
 
   const handleDeleteEducation = (eduId: string) => {
-    if (!user) return;
-    const eduRef = doc(firestore, `profiles/${user.uid}/educations/${eduId}`);
+    if (!firestore) return;
+    const eduRef = doc(firestore, `profiles/${profileId}/educations/${eduId}`);
     deleteDocumentNonBlocking(eduRef);
   };
 
@@ -108,5 +110,3 @@ export default function ManageEducationPage() {
     </div>
   );
 }
-
-    

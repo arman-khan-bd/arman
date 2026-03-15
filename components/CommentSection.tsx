@@ -97,7 +97,6 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
       blogId,
       blogSlug,
       createdAt,
-      ownerId: profileId, // for rules
       ...visitorData,
     };
 

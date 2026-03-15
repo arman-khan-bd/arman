@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 const initialExperienceState = {
     role: '',
@@ -20,11 +21,12 @@ export default function ManageExperiencePage() {
   const firestore = useFirestore();
   const [newExperience, setNewExperience] = useState(initialExperienceState);
   const [isAdding, setIsAdding] = useState(false);
+  const profileId = gitprofileConfig.github.username;
 
   const experiencesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/workExperiences`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/workExperiences`);
+  }, [firestore, profileId]);
 
   const { data: experiences, isLoading } = useCollection(experiencesQuery);
 
@@ -44,7 +46,7 @@ export default function ManageExperiencePage() {
     const experienceData = {
       ...newExperience,
       endDate: newExperience.isCurrent ? 'Present' : newExperience.endDate,
-      profileId: user.uid,
+      profileId: profileId,
       ownerId: user.uid,
     };
     
@@ -57,8 +59,8 @@ export default function ManageExperiencePage() {
   };
 
   const handleDeleteExperience = (expId: string) => {
-    if (!user) return;
-    const expRef = doc(firestore, `profiles/${user.uid}/workExperiences/${expId}`);
+    if (!firestore) return;
+    const expRef = doc(firestore, `profiles/${profileId}/workExperiences/${expId}`);
     deleteDocumentNonBlocking(expRef);
   };
 
@@ -117,5 +119,3 @@ export default function ManageExperiencePage() {
     </div>
   );
 }
-
-    

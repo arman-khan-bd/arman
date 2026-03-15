@@ -6,6 +6,7 @@ import { collection, doc, query, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Trash2, Globe } from 'lucide-react';
 import Image from 'next/image';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 interface Visitor {
   id: string;
@@ -23,6 +24,7 @@ export default function ManageVisitorsPage() {
   const firestore = useFirestore();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const profileId = gitprofileConfig.github.username;
 
   useEffect(() => {
     const fetchVisitors = async () => {
@@ -32,7 +34,7 @@ export default function ManageVisitorsPage() {
       }
       setIsLoading(true);
       try {
-        const visitorsQuery = query(collection(firestore, `profiles/${user.uid}/visitors`), orderBy('timestamp', 'desc'));
+        const visitorsQuery = query(collection(firestore, `profiles/${profileId}/visitors`), orderBy('timestamp', 'desc'));
         const querySnapshot = await getDocs(visitorsQuery);
         const visitorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Visitor[];
         setVisitors(visitorsData);
@@ -46,11 +48,11 @@ export default function ManageVisitorsPage() {
     if (user && firestore) {
       fetchVisitors();
     }
-  }, [user, firestore]);
+  }, [user, firestore, profileId]);
 
   const handleDelete = (visitorId: string) => {
-    if (!user) return;
-    const visitorRef = doc(firestore, `profiles/${user.uid}/visitors/${visitorId}`);
+    if (!firestore) return;
+    const visitorRef = doc(firestore, `profiles/${profileId}/visitors/${visitorId}`);
     deleteDocumentNonBlocking(visitorRef);
     // Optimistically update the UI
     setVisitors(prevVisitors => prevVisitors.filter(visitor => visitor.id !== visitorId));

@@ -15,6 +15,7 @@ import { CategoriesCard } from '../../../components/CategoriesCard';
 import { TagsCard } from '../../../components/TagsCard';
 import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 interface Blog {
   id: string;
@@ -35,7 +36,7 @@ export default function BlogDetailsPage() {
 
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const profileId = gitprofileConfig.github.username;
   const firestore = useFirestore();
 
   useEffect(() => {
@@ -47,23 +48,8 @@ export default function BlogDetailsPage() {
       setIsLoading(true);
 
       try {
-        // First, get the profileId
-        const profilesCollection = collection(firestore, 'profiles');
-        const profileQuery = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(profileQuery);
-        
-        let fetchedProfileId: string | null = null;
-        if (!profileSnapshot.empty) {
-          fetchedProfileId = profileSnapshot.docs[0].id;
-          setProfileId(fetchedProfileId);
-        } else {
-            setIsLoading(false);
-            return;
-        }
-        
-        // Then, get the blog post using the profileId
         const blogQuery = query(
-          collection(firestore, `profiles/${fetchedProfileId}/blogs`),
+          collection(firestore, `profiles/${profileId}/blogs`),
           where('slug', '==', decodeURIComponent(slug)),
           firestoreLimit(1)
         );
@@ -82,7 +68,7 @@ export default function BlogDetailsPage() {
       }
     };
     fetchBlogData();
-  }, [firestore, slug]);
+  }, [firestore, slug, profileId]);
 
 
   if (isLoading || (!blog && isLoading)) {
@@ -167,9 +153,9 @@ export default function BlogDetailsPage() {
 
           {/* Sidebar */}
           <aside className="space-y-8 lg:sticky lg:top-24 self-start">
-            <RelatedPosts currentSlug={blog.slug} />
-            <CategoriesCard />
-            <TagsCard />
+            <RelatedPosts currentSlug={blog.slug} profileId={profileId} />
+            <CategoriesCard profileId={profileId} />
+            <TagsCard profileId={profileId} />
           </aside>
         </div>
       </main>

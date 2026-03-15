@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { Trash2, MessageSquare, ExternalLink, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 interface Comment {
   id: string;
@@ -27,12 +28,13 @@ export default function ManageCommentsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [indexErrorUrl, setIndexErrorUrl] = useState<string | null>(null);
+  const profileId = gitprofileConfig.github.username;
 
   const commentsQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!firestore) return null;
     
-    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid), orderBy('createdAt', 'desc'));
-  }, [user, firestore]);
+    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', profileId), orderBy('createdAt', 'desc'));
+  }, [firestore, profileId]);
 
   const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
 
@@ -49,7 +51,7 @@ export default function ManageCommentsPage() {
   }, [error]);
 
   const handleDelete = (comment: Comment) => {
-    if (!user) return;
+    if (!firestore) return;
     const commentRef = doc(firestore, `profiles/${comment.profileId}/blogs/${comment.blogId}/comments/${comment.id}`);
     deleteDocumentNonBlocking(commentRef);
   };

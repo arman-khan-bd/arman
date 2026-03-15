@@ -11,32 +11,47 @@ import {
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { gitprofileConfig } from '../../gitprofile.config';
 
 export default function AdminDashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const profileId = gitprofileConfig.github.username;
 
   const blogsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/blogs`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/blogs`);
+  }, [firestore, profileId]);
   const { data: blogs } = useCollection(blogsQuery);
 
   const experiencesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/workExperiences`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/workExperiences`);
+  }, [firestore, profileId]);
   const { data: experiences } = useCollection(experiencesQuery);
 
   const educationsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/educations`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/educations`);
+  }, [firestore, profileId]);
   const { data: educations } = useCollection(educationsQuery);
+  
+  const ordersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/orders`);
+  }, [firestore, profileId]);
+  const { data: orders } = useCollection(ordersQuery);
+
+  const visitorsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/visitors`);
+  }, [firestore, profileId]);
+  const { data: visitors } = useCollection(visitorsQuery);
+
 
   const stats = [
-    { title: 'Visitors', value: '1,234', icon: Users, change: '+5.2%' },
-    { title: 'Orders', value: '56', icon: ShoppingCart, change: '+2' },
+    { title: 'Visitors', value: (visitors?.length ?? 0).toString(), icon: Users, change: '' },
+    { title: 'Orders', value: (orders?.length ?? 0).toString(), icon: ShoppingCart, change: '' },
     { title: 'Blog Posts', value: (blogs?.length ?? 0).toString(), icon: Newspaper, change: '' },
     { title: 'Experience', value: (experiences?.length ?? 0).toString(), icon: Briefcase, change: '' },
     { title: 'Education', value: (educations?.length ?? 0).toString(), icon: GraduationCap, change: '' },
@@ -59,4 +74,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-    

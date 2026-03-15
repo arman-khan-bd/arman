@@ -5,6 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNo
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Trash2, ShoppingCart, AlertTriangle, Mail, Phone, Check, Play, CheckCircle } from 'lucide-react';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 interface Order {
   id: string;
@@ -28,27 +29,27 @@ const statusColors: Record<Order['status'], string> = {
 };
 
 export default function ManageOrdersPage() {
-  const { user } = useUser();
   const firestore = useFirestore();
+  const profileId = gitprofileConfig.github.username;
 
   const ordersQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `profiles/${user.uid}/orders`), orderBy('createdAt', 'desc'));
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return query(collection(firestore, `profiles/${profileId}/orders`), orderBy('createdAt', 'desc'));
+  }, [firestore, profileId]);
 
   const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
 
   const handleDelete = (orderId: string) => {
-    if (!user) return;
+    if (!firestore) return;
     if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-        const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
+        const orderRef = doc(firestore, `profiles/${profileId}/orders/${orderId}`);
         deleteDocumentNonBlocking(orderRef);
     }
   };
 
   const handleUpdateStatus = (orderId: string, status: Order['status']) => {
-    if (!user) return;
-    const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
+    if (!firestore) return;
+    const orderRef = doc(firestore, `profiles/${profileId}/orders/${orderId}`);
     updateDocumentNonBlocking(orderRef, { status });
   };
 

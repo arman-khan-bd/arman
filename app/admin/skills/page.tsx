@@ -4,17 +4,19 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 export default function ManageSkillsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [newSkill, setNewSkill] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const profileId = gitprofileConfig.github.username;
 
   const skillsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/skills`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/skills`);
+  }, [firestore, profileId]);
 
   const { data: skills, isLoading } = useCollection(skillsQuery);
 
@@ -25,7 +27,7 @@ export default function ManageSkillsPage() {
     setIsAdding(true);
     const skillData = {
       name: newSkill,
-      profileId: user.uid,
+      profileId: profileId,
       ownerId: user.uid,
     };
     
@@ -38,8 +40,8 @@ export default function ManageSkillsPage() {
   };
 
   const handleDeleteSkill = (skillId: string) => {
-    if (!user) return;
-    const skillRef = doc(firestore, `profiles/${user.uid}/skills/${skillId}`);
+    if (!firestore) return;
+    const skillRef = doc(firestore, `profiles/${profileId}/skills/${skillId}`);
     deleteDocumentNonBlocking(skillRef);
   };
   

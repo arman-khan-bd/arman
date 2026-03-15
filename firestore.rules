@@ -3,40 +3,47 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Profiles are public, but only owner can write
-    match /profiles/{profileId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == profileId;
+    // Helper function to check ownership by reading the ownerId from the parent profile document.
+    function isProfileOwner(profileId) {
+      return request.auth != null && request.auth.uid == get(/databases/$(database)/documents/profiles/$(profileId)).data.ownerId;
     }
     
-    // Subcollections that are part of the public profile
+    // The main profile document. The document ID is the public github username.
+    match /profiles/{profileId} {
+      allow read: if true;
+      // Allow writes only if the user is authenticated and their UID matches the ownerId in the document.
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+    }
+    
+    // Admin-managed subcollections (blogs, projects, etc.)
     match /profiles/{profileId}/(skills|workExperiences|educations|projects|blogs)/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == profileId;
+      // Allow writes only by the profile owner.
+      allow write: if isProfileOwner(profileId);
     }
       
-    // Comments: Publicly readable/creatable, owner can delete
+    // Comments: public can read/create, only owner can delete.
     match /profiles/{profileId}/blogs/{blogId}/comments/{commentId} {
       allow read, create: if true;
-      allow delete: if request.auth != null && request.auth.uid == profileId;
+      allow delete: if isProfileOwner(profileId);
     }
       
-    // Orders: Creatable by public, only readable/writable by owner
+    // Orders: public can create, only owner can manage.
     match /profiles/{profileId}/orders/{orderId} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null && request.auth.uid == profileId;
+      allow read, update, delete: if isProfileOwner(profileId);
     }
       
-    // Visitors: Creatable by public (via API), only readable/deletable by owner
+    // Visitors: public can create (via API), only owner can read/delete.
     match /profiles/{profileId}/visitors/{visitorId} {
        allow create: if true;
-       allow read, delete: if request.auth != null && request.auth.uid == profileId;
+       allow read, delete: if isProfileOwner(profileId);
     }
       
-    // Messages: Creatable by public, only readable/deletable by owner
+    // Messages: public can create, only owner can manage.
     match /profiles/{profileId}/messages/{messageId} {
       allow create: if true;
-      allow read, delete: if request.auth != null && request.auth.uid == profileId;
+      allow read, update, delete: if isProfileOwner(profileId);
     }
   }
 }

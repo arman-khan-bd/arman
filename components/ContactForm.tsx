@@ -37,7 +37,7 @@ export const ContactForm = ({ profileId }: ContactFormProps) => {
     const messageData = {
       ...formData,
       profileId,
-      ownerId: profileId, // For security rules
+      // No ownerId here as this is a public action. Rules will handle auth.
       createdAt: new Date().toISOString(),
       isRead: false,
     };

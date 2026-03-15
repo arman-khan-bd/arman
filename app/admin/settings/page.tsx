@@ -40,14 +40,15 @@ export default function ManageSettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const isMobile = useIsMobile();
+  const profileId = gitprofileConfig.github.username;
 
   const { user } = useUser();
   const firestore = useFirestore();
 
   const profileRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, `profiles/${user.uid}`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return doc(firestore, 'profiles', profileId);
+  }, [firestore, profileId]);
 
   const { data: profileData, isLoading } = useDoc<Profile>(profileRef);
 
@@ -58,11 +59,11 @@ export default function ManageSettingsPage() {
       // If no data and not loading, initialize a default profile structure for a new user
       setProfile({
         ownerId: user.uid,
-        id: user.uid,
-        githubUsername: gitprofileConfig.github.username,
+        id: user.uid, // Keep this as UID for backwards compatibility if needed, though ownerId is primary
+        githubUsername: profileId,
       });
     }
-  }, [profileData, isLoading, user]);
+  }, [profileData, isLoading, user, profileId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -81,8 +82,8 @@ export default function ManageSettingsPage() {
     const dataToSave: Profile = {
       ...profile,
       ownerId: user.uid,
-      id: user.uid,
-      githubUsername: gitprofileConfig.github.username,
+      id: profileId, // The document ID is now the github username
+      githubUsername: profileId,
     };
 
     setDocumentNonBlocking(profileRef, dataToSave, { merge: true });

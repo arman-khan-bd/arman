@@ -9,6 +9,7 @@ import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'fi
 
 interface RelatedPostsProps {
   currentSlug: string;
+  profileId: string | null;
 }
 
 interface Blog {
@@ -18,13 +19,13 @@ interface Blog {
   date: string;
 }
 
-export const RelatedPosts = ({ currentSlug }: RelatedPostsProps) => {
+export const RelatedPosts = ({ currentSlug, profileId }: RelatedPostsProps) => {
   const [latestPosts, setLatestPosts] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (!firestore) {
+    if (!firestore || !profileId) {
       setIsLoading(false);
       return;
     }
@@ -32,24 +33,14 @@ export const RelatedPosts = ({ currentSlug }: RelatedPostsProps) => {
     const fetchPosts = async () => {
       setIsLoading(true);
       try {
-        // Fetch profile ID
-        const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
-        
-        if (!profileSnapshot.empty) {
-          const profileId = profileSnapshot.docs[0].id;
-          
-          // Fetch posts
-          const blogsQuery = query(
-              collection(firestore, `profiles/${profileId}/blogs`),
-              orderBy('date', 'desc'),
-              firestoreLimit(4)
-          );
-          const snapshot = await getDocs(blogsQuery);
-          const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Blog[];
-          setLatestPosts(postsData);
-        }
+        const blogsQuery = query(
+            collection(firestore, `profiles/${profileId}/blogs`),
+            orderBy('date', 'desc'),
+            firestoreLimit(4)
+        );
+        const snapshot = await getDocs(blogsQuery);
+        const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Blog[];
+        setLatestPosts(postsData);
       } catch (error) {
         console.error("Error fetching related posts:", error);
       } finally {
@@ -58,7 +49,7 @@ export const RelatedPosts = ({ currentSlug }: RelatedPostsProps) => {
     };
 
     fetchPosts();
-  }, [firestore]);
+  }, [firestore, profileId]);
 
   const relatedPosts = useMemo(() => {
     return latestPosts?.filter(p => p.slug !== currentSlug).slice(0, 3)

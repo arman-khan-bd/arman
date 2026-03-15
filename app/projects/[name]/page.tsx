@@ -21,6 +21,7 @@ import type { ProjectDetail } from '../../../data/projects';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -31,7 +32,7 @@ export default function ProjectDetailsPage() {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const profileId = gitprofileConfig.github.username;
 
   const firestore = useFirestore();
 
@@ -44,21 +45,8 @@ export default function ProjectDetailsPage() {
       setIsLoading(true);
 
       try {
-        const profilesCollection = collection(firestore, 'profiles');
-        const profileQuery = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(profileQuery);
-        
-        let fetchedProfileId: string | null = null;
-        if (!profileSnapshot.empty) {
-          fetchedProfileId = profileSnapshot.docs[0].id;
-          setProfileId(fetchedProfileId);
-        } else {
-            setIsLoading(false);
-            return;
-        }
-
         const projectQuery = query(
-          collection(firestore, `profiles/${fetchedProfileId}/projects`), 
+          collection(firestore, `profiles/${profileId}/projects`), 
           where('name', '==', decodeURIComponent(projectName)),
           firestoreLimit(1)
         );
@@ -78,7 +66,7 @@ export default function ProjectDetailsPage() {
     };
     
     fetchProjectData();
-  }, [firestore, projectName]);
+  }, [firestore, projectName, profileId]);
 
   const nextImage = () => {
     if (!project || !project.screenshots || project.screenshots.length === 0) return;

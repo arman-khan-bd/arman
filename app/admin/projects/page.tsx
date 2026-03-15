@@ -27,11 +27,12 @@ export default function ManageProjectsPage() {
   const firestore = useFirestore();
   const [newProject, setNewProject] = useState(initialProjectState);
   const [isAdding, setIsAdding] = useState(false);
+  const profileId = gitprofileConfig.github.username;
 
   const projectsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return collection(firestore, `profiles/${user.uid}/projects`);
-  }, [user, firestore]);
+    if (!firestore) return null;
+    return collection(firestore, `profiles/${profileId}/projects`);
+  }, [firestore, profileId]);
 
   const { data: projects, isLoading } = useCollection(projectsQuery);
 
@@ -69,7 +70,7 @@ export default function ManageProjectsPage() {
       ...newProject,
       techStack: newProject.techStack.split(',').map(s => s.trim()).filter(Boolean),
       screenshots: newProject.screenshots,
-      profileId: user.uid,
+      profileId: profileId,
       ownerId: user.uid,
     };
     
@@ -82,8 +83,8 @@ export default function ManageProjectsPage() {
   };
 
   const handleDeleteProject = (projId: string) => {
-    if (!user) return;
-    const projRef = doc(firestore, `profiles/${user.uid}/projects/${projId}`);
+    if (!firestore) return;
+    const projRef = doc(firestore, `profiles/${profileId}/projects/${projId}`);
     deleteDocumentNonBlocking(projRef);
   };
 

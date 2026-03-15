@@ -54,7 +54,8 @@ export const ProfileCard = ({ profile, isLoading }: ProfileCardProps) => {
             <Image 
               src={profilePhotoUrl} 
               alt={displayName} 
-              fill
+              width={200}
+              height={200}
               className="object-cover"
               referrerPolicy="no-referrer"
             />

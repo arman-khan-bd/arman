@@ -3,19 +3,23 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Folder } from 'lucide-react';
 import { useFirestore } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 
 interface BlogForCategories {
   categories: string[];
 }
 
-export const CategoriesCard = () => {
+interface CategoriesCardProps {
+  profileId: string | null;
+}
+
+export const CategoriesCard = ({ profileId }: CategoriesCardProps) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (!firestore) {
+    if (!firestore || !profileId) {
       setIsLoading(false);
       return;
     }
@@ -23,18 +27,11 @@ export const CategoriesCard = () => {
     const fetchBlogsForCategories = async () => {
       setIsLoading(true);
       try {
-        const profilesCollection = collection(firestore, 'profiles');
-        const profileQuery = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(profileQuery);
-        
-        if (!profileSnapshot.empty) {
-          const profileId = profileSnapshot.docs[0].id;
-          const blogsQuery = query(collection(firestore, `profiles/${profileId}/blogs`));
-          const blogsSnapshot = await getDocs(blogsQuery);
-          const blogsData = blogsSnapshot.docs.map(doc => doc.data()) as BlogForCategories[];
-          const allCategories = blogsData.flatMap(blog => blog.categories || []);
-          setCategories([...new Set(allCategories)]);
-        }
+        const blogsQuery = query(collection(firestore, `profiles/${profileId}/blogs`));
+        const blogsSnapshot = await getDocs(blogsQuery);
+        const blogsData = blogsSnapshot.docs.map(doc => doc.data()) as BlogForCategories[];
+        const allCategories = blogsData.flatMap(blog => blog.categories || []);
+        setCategories([...new Set(allCategories)]);
       } catch(e) {
         console.error("Error fetching categories:", e);
       } finally {
@@ -42,7 +39,7 @@ export const CategoriesCard = () => {
       }
     }
     fetchBlogsForCategories();
-  }, [firestore]);
+  }, [firestore, profileId]);
 
   if (isLoading) {
     return <div className="card p-6 h-32 animate-pulse bg-base-300" />;
