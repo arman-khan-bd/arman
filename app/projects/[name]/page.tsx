@@ -81,12 +81,12 @@ export default function ProjectDetailsPage() {
   }, [firestore, projectName]);
 
   const nextImage = () => {
-    if (!project || project.screenshots.length === 0) return;
+    if (!project || !project.screenshots || project.screenshots.length === 0) return;
     setCurrentImageIndex((prev) => (prev + 1) % project.screenshots.length);
   };
 
   const prevImage = () => {
-    if (!project || project.screenshots.length === 0) return;
+    if (!project || !project.screenshots || project.screenshots.length === 0) return;
     setCurrentImageIndex((prev) => (prev - 1 + project.screenshots.length) % project.screenshots.length);
   };
 

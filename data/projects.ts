@@ -1,8 +1,10 @@
 export interface ProjectDetail {
+  id: string;
   name: string;
   screenshots: string[];
   techStack: string[];
   longDescription: string;
+  description: string;
   repoUrl?: string;
   liveUrl?: string;
 }
@@ -15,5 +17,3 @@ export const getProjectDetails = (name: string): ProjectDetail | null => {
   // This function is obsolete. Data is fetched in the component.
   return null;
 };
-
-    
