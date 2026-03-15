@@ -63,8 +63,8 @@ export const gitprofileConfig = {
     },
   ],
   cloudinary: {
-    cloudName: 'your-cloud-name',
-    uploadPreset: 'your-upload-preset',
+    cloudName: 'dcckbmhft',
+    uploadPreset: 'personal',
   },
   googleAnalytics: {
     id: '', // GA3812918895
