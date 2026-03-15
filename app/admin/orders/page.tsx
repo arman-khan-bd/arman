@@ -4,7 +4,7 @@ import React from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Trash2, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { Trash2, ShoppingCart, AlertTriangle, Mail, Phone } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -72,6 +72,12 @@ export default function ManageOrdersPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
+                    <a href={`mailto:${order.email}`} className="btn btn-sm btn-ghost">
+                      <Mail size={16} /> Email
+                    </a>
+                    <a href={`tel:${order.phone}`} className="btn btn-sm btn-ghost">
+                      <Phone size={16} /> Call
+                    </a>
                     <button onClick={() => handleDelete(order.id)} className="btn btn-sm btn-error">
                       <Trash2 size={16} /> Delete
                     </button>
