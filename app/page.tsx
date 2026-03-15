@@ -10,8 +10,8 @@ import { BlogCard } from '../components/BlogCard';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
-import { useFirestore, useDoc, useMemoFirebase } from '../src/firebase';
-import { collection, query, getDocs, doc, limit as firestoreLimit } from 'firebase/firestore';
+import { useFirestore } from '../src/firebase';
+import { collection, query, getDocs, doc, getDoc, limit as firestoreLimit } from 'firebase/firestore';
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -46,41 +46,51 @@ export default function Home() {
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (firestore) {
-      const fetchProfileId = async () => {
-        try {
-          const profilesCollection = collection(firestore, 'profiles');
-          const q = query(profilesCollection, firestoreLimit(1));
-          const profileSnapshot = await getDocs(q);
-          if (!profileSnapshot.empty) {
-            setProfileId(profileSnapshot.docs[0].id);
-          } else {
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error("Error fetching profile ID:", error);
+    const fetchProfileData = async () => {
+      if (!firestore) {
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        // Step 1: Fetch Profile ID
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        
+        if (profileSnapshot.empty) {
+          console.log("No profile found, using static config for fallback.");
+          setProfile(null);
           setLoading(false);
+          return;
         }
-      };
-      fetchProfileId();
-    } else if (firestore === null) { // Firestore is initialized but not available
-      setLoading(false);
-    }
+        
+        const fetchedProfileId = profileSnapshot.docs[0].id;
+        setProfileId(fetchedProfileId);
+        
+        // Step 2: Fetch Profile Document with the ID
+        const profileRef = doc(firestore, 'profiles', fetchedProfileId);
+        const profileDoc = await getDoc(profileRef);
+        
+        if (profileDoc.exists()) {
+          setProfile(profileDoc.data() as Profile);
+        } else {
+          console.log("Profile document not found for ID:", fetchedProfileId);
+          setProfile(null);
+        }
+
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        setProfile(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
   }, [firestore]);
 
-  const profileRef = useMemoFirebase(() => {
-    if (!profileId || !firestore) return null;
-    return doc(firestore, 'profiles', profileId);
-  }, [profileId, firestore]);
-
-  const { data: profileData, isLoading: isProfileLoading } = useDoc<Profile>(profileRef);
-
-  useEffect(() => {
-    if (!isProfileLoading) {
-        setProfile(profileData);
-        setLoading(false);
-    }
-  }, [profileData, isProfileLoading]);
 
   return (
     <div className="min-h-screen flex flex-col">
