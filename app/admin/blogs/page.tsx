@@ -6,6 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBl
 import { collection, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 const initialBlogState = {
   title: '',
@@ -79,8 +80,7 @@ export default function ManageBlogsPage() {
     deleteDocumentNonBlocking(blogRef);
   };
   
-  const cloudName = "breellz";
-  const uploadPreset = "tutorial";
+  const { cloudName, uploadPreset } = gitprofileConfig.cloudinary;
 
   return (
     <div>

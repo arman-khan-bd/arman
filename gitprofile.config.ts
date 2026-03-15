@@ -62,6 +62,10 @@ export const gitprofileConfig = {
       to: '2019',
     },
   ],
+  cloudinary: {
+    cloudName: 'your-cloud-name',
+    uploadPreset: 'your-upload-preset',
+  },
   googleAnalytics: {
     id: '', // GA3812918895
   },

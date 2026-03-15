@@ -109,8 +109,7 @@ export default function ManageSettingsPage() {
     );
   }
 
-  const cloudName = "breellz";
-  const uploadPreset = "tutorial";
+  const { cloudName, uploadPreset } = gitprofileConfig.cloudinary;
 
   return (
     <div>

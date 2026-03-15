@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 const initialProjectState = {
     name: '',
@@ -81,8 +82,7 @@ export default function ManageProjectsPage() {
     deleteDocumentNonBlocking(projRef);
   };
 
-  const cloudName = "breellz";
-  const uploadPreset = "tutorial";
+  const { cloudName, uploadPreset } = gitprofileConfig.cloudinary;
 
   return (
     <div>
