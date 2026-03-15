@@ -31,8 +31,10 @@ export default function ManageOrdersPage() {
 
   const handleDelete = (orderId: string) => {
     if (!user) return;
-    const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
-    deleteDocumentNonBlocking(orderRef);
+    if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+        const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
+        deleteDocumentNonBlocking(orderRef);
+    }
   };
 
   return (
