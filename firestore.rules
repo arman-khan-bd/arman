@@ -77,8 +77,8 @@ service cloud.firestore {
        */
       match /orders/{orderId} {
         allow read, delete: if isProfileOwner(profileId);
-        allow create: if request.resource.data.profileId == profileId; // Allow public creation
-        allow update: if false; // Orders are immutable
+        allow create: if request.resource.data.profileId == profileId;
+        allow update: if isProfileOwner(profileId);
       }
 
       /**
@@ -97,13 +97,10 @@ service cloud.firestore {
      * This top-level rule with a wildcard path is necessary to allow collection group queries.
      */
     match /{path=**}/comments/{commentId} {
-      // Rules updated to support collection group queries for the admin dashboard.
+      // Allow public read access to all comments.
+      allow read: if true;
       
-      // Allow the user to list comments only if they own the parent profile.
-      // Note: This makes comments private to the profile owner.
-      allow read: if request.auth != null && request.auth.uid == resource.data.profileId;
-      
-      // Allow anyone to create a comment.
+      // Allow anyone to create a comment, provided required fields are present.
       allow create: if request.resource.data.profileId != null && request.resource.data.blogId != null;
 
       // Do not allow comments to be updated.
