@@ -24,7 +24,9 @@ export default function ManageCommentsPage() {
 
   const commentsQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid), orderBy('createdAt', 'desc'));
+    // The orderBy clause was removed to prevent a crash without the required Firestore index.
+    // To re-enable sorting, create the composite index in your Firebase console using the link from the build error.
+    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid));
   }, [user, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
@@ -80,5 +82,3 @@ export default function ManageCommentsPage() {
     </div>
   );
 }
-
-    
