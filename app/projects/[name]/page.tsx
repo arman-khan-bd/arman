@@ -99,6 +99,7 @@ export default function ProjectDetailsPage() {
         isOpen={isOrderModalOpen} 
         onClose={() => setIsOrderModalOpen(false)} 
         projectName={project.name} 
+        profileId={profileId}
       />
       
       {/* Header */}

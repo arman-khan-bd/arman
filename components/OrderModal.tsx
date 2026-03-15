@@ -3,14 +3,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 interface OrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
+  profileId: string | null;
 }
 
-export const OrderModal = ({ isOpen, onClose, projectName }: OrderModalProps) => {
+export const OrderModal = ({ isOpen, onClose, projectName, profileId }: OrderModalProps) => {
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [description, setDescription] = useState('');
   const [fullName, setFullName] = useState('');
@@ -19,27 +22,36 @@ export const OrderModal = ({ isOpen, onClose, projectName }: OrderModalProps) =>
   const [isUrgent, setIsUrgent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const firestore = useFirestore();
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!profileId || !firestore) {
+      setError("Could not submit order. Profile not found.");
+      return;
+    }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsSubmitting(true);
+    setError(null);
 
     const orderData = {
+      profileId,
+      ownerId: profileId,
       projectName,
-      type: isCustomizing ? 'Customized' : 'As is',
+      isCustom: isCustomizing,
       description: isCustomizing ? description : 'No customization requested',
       fullName,
       email,
       phone,
       isUrgent,
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
 
-    console.log('Order Submitted:', orderData);
-    
+    const ordersCollection = collection(firestore, `profiles/${profileId}/orders`);
+    addDocumentNonBlocking(ordersCollection, orderData);
+
     setIsSubmitting(false);
     setIsSuccess(true);
     
@@ -220,6 +232,9 @@ export const OrderModal = ({ isOpen, onClose, projectName }: OrderModalProps) =>
                       />
                     </button>
                   </div>
+                  
+                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
 
                   {/* Submit Button */}
                   <button

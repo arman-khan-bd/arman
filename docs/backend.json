@@ -438,6 +438,43 @@
         "name",
         "description"
       ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a single comment on a blog post.",
+      "properties": {
+        "id": { "type": "string" },
+        "profileId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "blogSlug": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "profileId", "ownerId", "blogSlug", "fullName", "text", "createdAt"]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a single project order.",
+      "properties": {
+        "id": { "type": "string" },
+        "profileId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "projectName": { "type": "string" },
+        "isCustom": { "type": "boolean" },
+        "description": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "isUrgent": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "profileId", "ownerId", "projectName", "isCustom", "fullName", "email", "phone", "createdAt"]
     }
   },
   "auth": {
@@ -585,6 +622,46 @@
         }
       },
       {
+        "path": "/profiles/{profileId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments on blog posts. Publicly readable, and creatable by anyone. Deletable only by the profile owner.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "commentId",
+              "description": "Unique identifier for the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores project orders. Readable only by the profile owner, but creatable by anyone.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "orderId",
+              "description": "Unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
         "path": "/admin_users/{userId}",
         "definition": {
           "entityName": "admin_user_role",
@@ -604,5 +681,3 @@
     "reasoning": "This Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence:** The central strategy for achieving authorization independence (eliminating `get()` calls in security rules) is through denormalization. Each `Profile` document at `/profiles/{profileId}` stores an `ownerId` field, which corresponds to the Firebase Authentication UID of the user who owns that profile. For all subcollections (`socialLinks`, `workExperiences`, `blogs`, `educations`), each document will *also* contain the `ownerId` denormalized from its parent `Profile`. This ensures that security rules for creating, updating, or deleting any subcollection document can directly check `request.auth.uid == resource.data.ownerId` without needing to perform a `get()` operation on the parent `Profile` document. This allows for atomic operations and simplifies rule logic considerably.\n\n**Structural Segregation & QAPs:** All user profiles and their associated sub-data (social links, work experience, publications) are designed to be publicly readable but privately editable by their respective `ownerId`. This means that all documents within `/profiles/{profileId}` and its subcollections (`/profiles/{profileId}/socialLinks`, etc.) share a homogeneous security posture regarding read access (public). This directly supports the Query as Permissions (QAP) principle: since all data in these collections is intended for public consumption, a `list` query will naturally return all documents, and no filtering is performed by security rules for read access. Write access is strictly controlled by the denormalized `ownerId`, ensuring only the profile owner can modify their data.\n\n**Access Modeling:**\n*   **User-Owned Data:** The primary data, `Profile` and its related sub-entities, is structured hierarchically (`/profiles/{profileId}/subcollection/{subDocId}`). This clearly defines ownership and relationships. The `ownerId` field within each document (`Profile`, `SocialLink`, `WorkExperience`, `Blog`, `Education`) links it to the Firebase Auth `uid`.\n*   **Global Roles (DBAC):** For the administrative dashboard login requirement, a dedicated collection `/admin_users/{userId}` is introduced. The mere existence of a document for a given `userId` in this collection grants administrative privileges. This 'existence over content' approach for roles is simple to implement and highly debuggable in security rules (`exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))`).\n\n**Overall:** This structure prioritizes explicit authorization logic within each document, simplifying security rules and making them easier to test and maintain. The clear separation of public read access from owner-only write access, coupled with the hierarchical pathing, ensures a robust and predictable data model for DevFolio."
   }
 }
-
-    

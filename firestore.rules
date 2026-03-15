@@ -53,6 +53,10 @@ service cloud.firestore {
     function isOwner(ownerId) {
       return isSignedIn() && request.auth.uid == ownerId;
     }
+    
+    function isProfileOwner(profileId) {
+      return isSignedIn() && request.auth.uid == profileId;
+    }
 
     /**
      * Checks for ownership on an existing document. Used for update/delete operations.
@@ -113,12 +117,38 @@ service cloud.firestore {
       allow update: if isExistingOwner(resource.data.ownerId) && isProfileOwnerImmutableOnUpdate();
       allow delete: if isExistingOwner(resource.data.ownerId);
 
+      // --- Specific subcollections first ---
+
+      // Comments: Publicly readable, anyone can create, owner can delete.
+      match /comments/{commentId} {
+        allow get: if true;
+        allow list: if true;
+        // Anyone can create a comment, just ensure it's for the correct profile
+        // and has the required fields.
+        allow create: if request.resource.data.profileId == profileId &&
+                       'fullName' in request.resource.data &&
+                       'text' in request.resource.data &&
+                       'blogSlug' in request.resource.data;
+        allow update: if false; // Comments are immutable by users.
+        allow delete: if isProfileOwner(profileId); // Profile owner can delete comments.
+      }
+
+      // Orders: Owner can read/list/delete, anyone can create.
+      match /orders/{orderId} {
+        allow get: if isProfileOwner(profileId);
+        allow list: if isProfileOwner(profileId);
+        // Anyone can create an order. Ensure it's for the right profile.
+        allow create: if request.resource.data.profileId == profileId &&
+                       'projectName' in request.resource.data &&
+                       'fullName' in request.resource.data &&
+                       'email' in request.resource.data;
+        allow update: if false; // Orders are immutable by users.
+        allow delete: if isProfileOwner(profileId); // Profile owner can delete orders.
+      }
+
       /**
-       * @description Rules for all profile subcollections (work history, social links, etc.).
+       * @description Rules for all other profile subcollections.
        * @path /profiles/{profileId}/{subcollection}/{docId}
-       * @allow (get) Anyone can read items within a profile, like a specific work experience entry.
-       * @allow (create) The profile owner can add a new item (e.g., a social link) to their own profile.
-       * @deny (delete) A user cannot delete an item from a profile they do not own.
        * @principle Authorization Independence. Relies on a denormalized `ownerId` on each subcollection document to avoid `get()` calls to the parent profile.
        */
       match /{subcollection}/{docId} {
@@ -133,9 +163,6 @@ service cloud.firestore {
     /**
      * @description Rules for the admin roles collection.
      * @path /admin_users/{userId}
-     * @allow (get) An existing admin can read the document of another admin.
-     * @deny (get) A non-admin user cannot check if another user is an admin.
-     * @deny (create) A non-admin user cannot grant themselves administrative privileges.
      * @principle Role-Based Access. Access to this collection is highly restricted and only available to users who are already designated as administrators.
      */
     match /admin_users/{userId} {

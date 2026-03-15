@@ -15,6 +15,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
 interface Blog {
+  id: string;
   slug: string;
   title: string;
   description: string;
@@ -135,7 +136,7 @@ export default function BlogDetailsPage() {
                 <ReactMarkdown>{blog.content}</ReactMarkdown>
               </article>
               
-              <CommentSection />
+              {profileId && blog.slug && <CommentSection profileId={profileId} blogSlug={blog.slug} />}
             </motion.div>
           </div>
 
