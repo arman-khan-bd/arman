@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Loader } from 'lucide-react';
+import { Plus, Trash2, Loader, X } from 'lucide-react';
+import Image from 'next/image';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
 
 const initialProjectState = {
     name: '',
@@ -12,7 +14,7 @@ const initialProjectState = {
     techStack: '',
     repoUrl: '',
     liveUrl: '',
-    screenshots: '',
+    screenshots: [] as string[],
 };
 
 const inputClass = "w-full p-3 bg-base-200 border border-base-300 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all";
@@ -35,6 +37,22 @@ export default function ManageProjectsPage() {
     const { name, value } = e.target;
     setNewProject(prev => ({ ...prev, [name]: value }));
   };
+  
+  const handleScreenshotUpload = (url: string | null) => {
+    if (url) {
+        setNewProject(prev => ({
+            ...prev,
+            screenshots: [...prev.screenshots, url]
+        }));
+    }
+  };
+
+  const handleRemoveScreenshot = (indexToRemove: number) => {
+    setNewProject(prev => ({
+        ...prev,
+        screenshots: prev.screenshots.filter((_, index) => index !== indexToRemove)
+    }));
+  };
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +62,7 @@ export default function ManageProjectsPage() {
     const projectData = {
       ...newProject,
       techStack: newProject.techStack.split(',').map(s => s.trim()).filter(Boolean),
-      screenshots: newProject.screenshots.split(',').map(s => s.trim()).filter(Boolean),
+      screenshots: newProject.screenshots,
       profileId: user.uid,
       ownerId: user.uid,
     };
@@ -63,6 +81,9 @@ export default function ManageProjectsPage() {
     deleteDocumentNonBlocking(projRef);
   };
 
+  const cloudName = "breellz";
+  const uploadPreset = "tutorial";
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -79,7 +100,41 @@ export default function ManageProjectsPage() {
           <textarea name="description" value={newProject.description} onChange={handleInputChange} placeholder="Short Description" className={textareaClass} required />
           <textarea name="longDescription" value={newProject.longDescription} onChange={handleInputChange} placeholder="Long Description (for detail page)" className={textareaClass} />
           <textarea name="techStack" value={newProject.techStack} onChange={handleInputChange} placeholder="Tech Stack (comma-separated, e.g., React, Next.js)" className={textareaClass} />
-          <textarea name="screenshots" value={newProject.screenshots} onChange={handleInputChange} placeholder="Screenshot URLs (comma-separated)" className={textareaClass} />
+          
+          <div>
+            <CloudinaryUploader
+                label="Project Screenshots"
+                currentUrl={null}
+                onUrlChange={handleScreenshotUpload}
+                cloudName={cloudName}
+                uploadPreset={uploadPreset}
+            />
+            {newProject.screenshots.length > 0 && (
+                <div className="mt-4">
+                    <p className="text-sm font-bold mb-2">Uploaded Screenshots:</p>
+                    <div className="flex flex-wrap gap-4">
+                        {newProject.screenshots.map((url, index) => (
+                            <div key={index} className="relative group w-24 h-24">
+                                <Image
+                                    src={url}
+                                    alt={`Screenshot ${index + 1}`}
+                                    fill
+                                    className="object-cover rounded-lg border border-base-300"
+                                    referrerPolicy="no-referrer"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveScreenshot(index)}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+          </div>
           
           <button type="submit" className="btn btn-primary" disabled={isAdding}>
             {isAdding ? <Loader size={16} className="animate-spin" /> : <Plus size={16} />}
@@ -118,5 +173,3 @@ export default function ManageProjectsPage() {
     </div>
   );
 }
-
-    

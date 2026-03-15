@@ -30,8 +30,8 @@ export const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({ label, c
     setError(null);
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", uploadPreset);
-    data.append("cloud_name", cloudName);
+    data.append("personal", uploadPreset);
+    data.append("dcckbmhft", cloudName);
 
     fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "post",
