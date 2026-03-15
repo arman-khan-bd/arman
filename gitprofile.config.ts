@@ -1,6 +1,6 @@
 export const gitprofileConfig = {
   github: {
-    username: 'arifszn', // Your GitHub username
+    username: 'arman-ali-khan', // Your GitHub username
     sortBy: 'stars', // stars | updated
     limit: 8, // How many projects to display
     exclude: {
@@ -18,8 +18,8 @@ export const gitprofileConfig = {
     medium: '',
     dev: '',
     website: 'https://armankhan.me',
-    phone: '+11234567890',
-    email: 'contact@armanalikhan.com',
+    phone: '+8801701034883',
+    email: 'sparmankhan@gmail.com',
   },
   resume: {
     fileUrl: '', // Empty fileUrl will hide the resume button
