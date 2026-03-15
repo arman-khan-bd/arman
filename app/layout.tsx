@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { FirebaseClientProvider } from '../src/firebase/client-provider';
+import { VisitorLogger } from '../src/components/VisitorLogger';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -21,9 +22,12 @@ export default function RootLayout({
       <body className="antialiased">
         <FirebaseClientProvider>
           <ThemeProvider />
+          <VisitorLogger />
           {children}
         </FirebaseClientProvider>
       </body>
     </html>
   );
 }
+
+    

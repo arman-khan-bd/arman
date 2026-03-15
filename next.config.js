@@ -34,6 +34,12 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'flagcdn.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
@@ -51,3 +57,5 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+    

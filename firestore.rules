@@ -94,6 +94,17 @@ service cloud.firestore {
         allow create: if request.resource.data.profileId == profileId; // Allow public creation
         allow update: if false; // Orders are immutable
       }
+
+      /**
+       * @description Rules for Visitor logs.
+       * Admin can read/delete. Creation is handled by the client after getting IP
+       * data from a trusted API route.
+       */
+      match /visitors/{visitorId} {
+        allow read, delete: if isProfileOwner(profileId);
+        allow create: if request.resource.data.profileId == profileId;
+        allow update: if false;
+      }
     }
 
     /**

@@ -476,6 +476,76 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "profileId", "ownerId", "projectName", "isCustom", "fullName", "email", "phone", "createdAt"]
+    },
+    "Visitor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Visitor",
+      "type": "object",
+      "description": "Represents a single visitor record captured from ip-api.com.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "isp": {
+          "type": "string"
+        },
+        "org": {
+          "type": "string"
+        },
+        "as": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "ownerId",
+        "timestamp",
+        "ip"
+      ]
     }
   },
   "auth": {
@@ -662,6 +732,26 @@
             {
               "name": "orderId",
               "description": "Unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/visitors/{visitorId}",
+        "definition": {
+          "entityName": "Visitor",
+          "schema": {
+            "$ref": "#/backend/entities/Visitor"
+          },
+          "description": "Stores visitor tracking data. Readable only by the profile owner. Created via a client-side call after getting data from a serverless function.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "visitorId",
+              "description": "Unique identifier for the visitor record."
             }
           ]
         }
