@@ -93,10 +93,6 @@
     border-color: var(--mdxeditor-input-focus-border-color) !important;
   }
   
-  .dark-theme .mdxeditor-root-container {
-    background-color: hsl(var(--base-200));
-  }
-  
   .mdxeditor-root-container .mdxeditor-placeholder {
     color: hsl(var(--base-content) / 0.5);
   }

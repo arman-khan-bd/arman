@@ -1,6 +1,7 @@
 'use client';
 
 import type { ForwardedRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   headingsPlugin,
   listsPlugin,
@@ -31,6 +32,25 @@ function InitializedMDXEditor({
   editorRef,
   ...props
 }: { editorRef: ForwardedRef<MDXEditorMethods> | null } & MDXEditorProps) {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Function to check and apply theme
+    const checkTheme = () => {
+      const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+      setIsDark(isDarkMode);
+    };
+
+    // Initial check
+    checkTheme();
+
+    // Set up a MutationObserver to watch for changes in the data-theme attribute
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // Clean up the observer on component unmount
+    return () => observer.disconnect();
+  }, []);
 
   const handleImageUpload = (image: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -61,6 +81,7 @@ function InitializedMDXEditor({
 
   return (
     <MDXEditor
+      className={isDark ? 'dark-theme' : ''}
       plugins={[
         headingsPlugin(),
         listsPlugin(),
