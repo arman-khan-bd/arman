@@ -51,6 +51,11 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
     fetchComments();
   }, [profileId, blogId, firestore]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewComment(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.text.trim() || !newComment.fullName.trim() || !profileId || !firestore) return;
