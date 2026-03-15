@@ -103,9 +103,8 @@ export function useCollection<T = any>(
           errorEmitter.emit('permission-error', contextualError);
         } else {
           // For other errors like 'failed-precondition' (missing index),
-          // set the original error so the developer can see the real cause.
+          // set the original error so the component can handle it.
           setError(error);
-          throw error;
         }
 
         setData(null);
