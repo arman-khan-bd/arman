@@ -4,14 +4,18 @@ import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
 import { motion } from 'motion/react';
 import { useFirestore } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 
 interface Skill {
     id: string;
     name: string;
 }
 
-export const SkillsCard = () => {
+interface SkillsCardProps {
+    profileId: string | null;
+}
+
+export const SkillsCard = ({ profileId }: SkillsCardProps) => {
     const [skills, setSkills] = useState<Skill[]>([]);
     const [loading, setLoading] = useState(true);
     const firestore = useFirestore();
@@ -20,21 +24,19 @@ export const SkillsCard = () => {
         const fetchSkills = async () => {
             setLoading(true);
             try {
-                if (firestore) {
-                    const profilesCollection = collection(firestore, 'profiles');
-                    const q = query(profilesCollection, firestoreLimit(1));
-                    const profileSnapshot = await getDocs(q);
-
-                    if (!profileSnapshot.empty) {
-                        const profileDoc = profileSnapshot.docs[0];
-                        const skillsCollection = collection(firestore, `profiles/${profileDoc.id}/skills`);
-                        const skillsSnapshot = await getDocs(skillsCollection);
-                        const skillsData = skillsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Skill[];
+                if (firestore && profileId) {
+                    const skillsCollection = collection(firestore, `profiles/${profileId}/skills`);
+                    const skillsSnapshot = await getDocs(skillsCollection);
+                    const skillsData = skillsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Skill[];
+                    
+                    if (skillsData.length > 0) {
                         setSkills(skillsData);
                     } else {
+                        // Fallback to static data if no skills in DB for this profile
                         setSkills(gitprofileConfig.skills.map(name => ({ id: name, name })));
                     }
                 } else {
+                    // Fallback for when firestore or profileId is not ready, or for static use
                     setSkills(gitprofileConfig.skills.map(name => ({ id: name, name })));
                 }
             } catch (error) {
@@ -45,7 +47,7 @@ export const SkillsCard = () => {
             }
         };
         fetchSkills();
-    }, [firestore]);
+    }, [firestore, profileId]);
 
 
     if (loading) {

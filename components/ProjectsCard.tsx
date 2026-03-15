@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
 import { Folder, Globe, ShoppingCart, Github } from 'lucide-react';
 import { motion } from 'motion/react';
 import { OrderModal } from './OrderModal';
 import Link from 'next/link';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+import { collection, query, limit as firestoreLimit, orderBy } from 'firebase/firestore';
 
 interface Project {
   id: string;
@@ -22,40 +22,27 @@ interface ProjectsCardProps {
   limit?: number;
   showTitle?: boolean;
   showSeeAll?: boolean;
+  profileId: string | null;
 }
 
 export const ProjectsCard = ({ 
-  limit = 0, 
+  limit = 4, 
   showTitle = true,
-  showSeeAll = true 
+  showSeeAll = true,
+  profileId
 }: ProjectsCardProps) => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [profileId, setProfileId] = useState<string | null>(null);
   const firestore = useFirestore();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
-        const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
-        if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
-        }
-      }
-    };
-    fetchProfile();
-  }, [firestore]);
 
   const projectsQuery = useMemoFirebase(() => {
     if (!profileId) return null;
     const q = query(collection(firestore, `profiles/${profileId}/projects`), orderBy('name'));
-    return limit ? query(q, firestoreLimit(limit)) : q;
+    return limit > 0 ? query(q, firestoreLimit(limit)) : q;
   }, [profileId, firestore, limit]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
-  if (isLoading) {
+  if (isLoading && !projects) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...Array(limit || 4)].map((_, i) => (
@@ -64,6 +51,8 @@ export const ProjectsCard = ({
       </div>
     );
   }
+  
+  if (!projects || projects.length === 0) return null;
 
   return (
     <div className="space-y-6">
@@ -76,7 +65,7 @@ export const ProjectsCard = ({
       {(showTitle || showSeeAll) && (
         <div className="flex justify-between items-center">
           {showTitle && <h2 className="text-xl font-bold">My Projects</h2>}
-          {showSeeAll && (
+          {showSeeAll && projects.length > 0 && limit !== 0 && (
             <Link 
               href="/projects" 
               className="text-primary text-sm font-medium hover:underline"

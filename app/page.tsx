@@ -91,15 +91,15 @@ export default function Home() {
           <div className="sm:col-span-1 space-y-4">
             <ProfileCard profile={profile} isLoading={loading} />
             <DetailsCard profile={profile} isLoading={loading} />
-            <SkillsCard />
-            <ExperienceCard />
-            <EducationCard />
+            <SkillsCard profileId={profileId} />
+            <ExperienceCard profileId={profileId} />
+            <EducationCard profileId={profileId} />
           </div>
 
           {/* Main Content */}
           <div className="sm:col-span-2 space-y-8">
-            <ProjectsCard />
-            <BlogCard />
+            <ProjectsCard profileId={profileId} />
+            <BlogCard profileId={profileId} />
           </div>
         </div>
       </main>

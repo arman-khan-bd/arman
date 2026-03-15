@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+import { collection, query, limit as firestoreLimit, orderBy } from 'firebase/firestore';
 
 interface Blog {
   id: string;
@@ -25,29 +25,16 @@ interface BlogCardProps {
   limit?: number;
   showTitle?: boolean;
   showSeeAll?: boolean;
+  profileId: string | null;
 }
 
 export const BlogCard = ({ 
   limit = 6, 
   showTitle = true, 
-  showSeeAll = true 
+  showSeeAll = true,
+  profileId
 }: BlogCardProps) => {
-  const [profileId, setProfileId] = useState<string | null>(null);
   const firestore = useFirestore();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
-        const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
-        if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
-        }
-      }
-    };
-    fetchProfile();
-  }, [firestore]);
 
   const blogsQuery = useMemoFirebase(() => {
     if (!profileId) return null;
@@ -60,7 +47,7 @@ export const BlogCard = ({
 
   const { data: posts, isLoading } = useCollection<Blog>(blogsQuery);
 
-  if (isLoading) {
+  if (isLoading && !posts) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...Array(limit > 0 ? limit : 2)].map((_, i) => (
@@ -77,7 +64,7 @@ export const BlogCard = ({
       {(showTitle || showSeeAll) && (
         <div className="flex justify-between items-center">
           {showTitle && <h2 className="text-xl font-bold">Recent Posts</h2>}
-          {showSeeAll && (
+          {showSeeAll && posts.length > 0 && limit !== 0 && (
             <Link 
               href="/blogs"
               className="text-primary text-sm font-medium hover:underline"

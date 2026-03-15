@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
 import { motion } from 'motion/react';
 import { useFirestore } from '@/firebase';
-import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 
 interface Experience {
     id: string;
@@ -23,7 +23,11 @@ interface Education {
     to: string;
 }
 
-export const ExperienceCard = () => {
+interface TimelineCardProps {
+    profileId: string | null;
+}
+
+export const ExperienceCard = ({ profileId }: TimelineCardProps) => {
     const [experiences, setExperiences] = useState<Experience[]>([]);
     const [loading, setLoading] = useState(true);
     const firestore = useFirestore();
@@ -32,20 +36,15 @@ export const ExperienceCard = () => {
         const fetchExperiences = async () => {
             setLoading(true);
             try {
-                if (firestore) {
-                    const profilesCollection = collection(firestore, 'profiles');
-                    const profileQuery = query(profilesCollection, limit(1));
-                    const profileSnapshot = await getDocs(profileQuery);
-
-                    if (!profileSnapshot.empty) {
-                        const profileDoc = profileSnapshot.docs[0];
-                        const expCollection = collection(firestore, `profiles/${profileDoc.id}/workExperiences`);
-                        const expQuery = query(expCollection, orderBy('startDate', 'desc'));
-                        const expSnapshot = await getDocs(expQuery);
-                        const expData = expSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Experience[];
+                if (firestore && profileId) {
+                    const expCollection = collection(firestore, `profiles/${profileId}/workExperiences`);
+                    const expQuery = query(expCollection, orderBy('startDate', 'desc'));
+                    const expSnapshot = await getDocs(expQuery);
+                    const expData = expSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Experience[];
+                     if (expData.length > 0) {
                         setExperiences(expData);
                     } else {
-                         setExperiences(gitprofileConfig.experiences.map((exp, i) => ({
+                        setExperiences(gitprofileConfig.experiences.map((exp, i) => ({
                             id: `static-${i}`,
                             role: exp.position,
                             companyName: exp.company,
@@ -79,7 +78,7 @@ export const ExperienceCard = () => {
             }
         };
         fetchExperiences();
-    }, [firestore]);
+    }, [firestore, profileId]);
 
     if (loading) {
         return <div className="card p-6 h-40 animate-pulse bg-base-300" />;
@@ -112,7 +111,7 @@ export const ExperienceCard = () => {
     );
 };
 
-export const EducationCard = () => {
+export const EducationCard = ({ profileId }: TimelineCardProps) => {
     const [educations, setEducations] = useState<Education[]>([]);
     const [loading, setLoading] = useState(true);
     const firestore = useFirestore();
@@ -121,17 +120,13 @@ export const EducationCard = () => {
         const fetchEducations = async () => {
             setLoading(true);
             try {
-                if (firestore) {
-                    const profilesCollection = collection(firestore, 'profiles');
-                    const profileQuery = query(profilesCollection, limit(1));
-                    const profileSnapshot = await getDocs(profileQuery);
-
-                    if (!profileSnapshot.empty) {
-                        const profileDoc = profileSnapshot.docs[0];
-                        const eduCollection = collection(firestore, `profiles/${profileDoc.id}/educations`);
-                        const eduQuery = query(eduCollection, orderBy('from', 'desc'));
-                        const eduSnapshot = await getDocs(eduQuery);
-                        const eduData = eduSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Education[];
+                if (firestore && profileId) {
+                    const eduCollection = collection(firestore, `profiles/${profileId}/educations`);
+                    const eduQuery = query(eduCollection, orderBy('from', 'desc'));
+                    const eduSnapshot = await getDocs(eduQuery);
+                    const eduData = eduSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Education[];
+                    
+                    if (eduData.length > 0) {
                         setEducations(eduData);
                     } else {
                         setEducations(gitprofileConfig.educations as Education[]);
@@ -148,7 +143,7 @@ export const EducationCard = () => {
         };
 
         fetchEducations();
-    }, [firestore]);
+    }, [firestore, profileId]);
 
     if (loading) {
         return <div className="card p-6 h-40 animate-pulse bg-base-300 mt-4" />;
