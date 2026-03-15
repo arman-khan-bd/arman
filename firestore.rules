@@ -97,20 +97,20 @@ service cloud.firestore {
      * This top-level rule with a wildcard path is necessary to allow collection group queries.
      */
     match /{path=**}/comments/{commentId} {
-        // Anyone (public) can read comments. This allows reads on the blog page
-        // and also allows the admin's collection group query to work.
-        allow read: if true;
+      // Rules updated to support collection group queries for the admin dashboard.
+      
+      // Allow the user to list comments only if they own the parent profile.
+      // Note: This makes comments private to the profile owner.
+      allow read: if request.auth != null && request.auth.uid == resource.data.profileId;
+      
+      // Allow anyone to create a comment.
+      allow create: if request.resource.data.profileId != null && request.resource.data.blogId != null;
 
-        // Anyone can create a comment, but we validate the data being sent.
-        // It must contain the correct profileId and blogId.
-        allow create: if request.resource.data.profileId != null && request.resource.data.blogId != null;
-        
-        // Comments cannot be edited.
-        allow update: if false;
-        
-        // Only the owner of the profile can delete comments.
-        // This relies on the `ownerId` being correctly set on the comment document during creation.
-        allow delete: if request.auth.uid == resource.data.ownerId;
+      // Do not allow comments to be updated.
+      allow update: if false;
+
+      // Allow the profile owner to delete comments.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.profileId;
     }
 
     /**
