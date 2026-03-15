@@ -492,6 +492,24 @@
       },
       "required": ["id", "profileId", "ownerId", "projectName", "isCustom", "fullName", "email", "phone", "createdAt", "status"]
     },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single contact message sent from the portfolio.",
+      "properties": {
+        "id": { "type": "string" },
+        "profileId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["id", "profileId", "ownerId", "fullName", "email", "message", "createdAt"]
+    },
     "Visitor": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Visitor",
@@ -748,6 +766,20 @@
               "name": "orderId",
               "description": "Unique identifier for the order."
             }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": {
+            "$ref": "#/backend/entities/Message"
+          },
+          "description": "Stores contact form messages. Readable only by the profile owner, but creatable by anyone.",
+          "params": [
+            { "name": "profileId" },
+            { "name": "messageId" }
           ]
         }
       },

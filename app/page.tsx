@@ -7,6 +7,7 @@ import { SkillsCard } from '../components/SkillsCard';
 import { ExperienceCard, EducationCard } from '../components/TimelineCards';
 import { ProjectsCard } from '../components/ProjectsCard';
 import { BlogCard } from '../components/BlogCard';
+import { ContactForm } from '../components/ContactForm';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
@@ -110,6 +111,7 @@ export default function Home() {
           <div className="sm:col-span-2 space-y-8">
             <ProjectsCard profileId={profileId} />
             <BlogCard profileId={profileId} />
+            <ContactForm profileId={profileId} />
           </div>
         </div>
       </main>
