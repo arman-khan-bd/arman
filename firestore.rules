@@ -2,48 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Allow public read access to everything ---
-    // This is the main fix. It allows your public website to read data.
+    // WARNING: This is a temporary, insecure rule for diagnostics.
+    // It allows anyone to read or write to any document in your database.
+    // We will replace this with secure rules once data loading is confirmed.
     match /{document=**} {
-      allow read: if true;
-    }
-
-    // --- Overwrite with specific write/delete rules for security ---
-
-    // Helper function to check for ownership.
-    function isProfileOwner(profileId) {
-      return request.auth != null && request.auth.uid == get(/databases/$(database)/documents/profiles/$(profileId)).data.ownerId;
-    }
-
-    // --- Write rules for collections ---
-
-    // Only the owner can write to their main profile.
-    match /profiles/{profileId} {
-      allow write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
-    }
-    
-    // Only the owner can write to these subcollections.
-    match /profiles/{profileId}/(skills|workExperiences|educations|projects|blogs)/{docId} {
-      allow write: if isProfileOwner(profileId);
-    }
-      
-    // Anyone can create comments, but only the owner can delete them.
-    match /profiles/{profileId}/blogs/{blogId}/comments/{commentId} {
-      allow create: if true;
-      allow delete: if isProfileOwner(profileId);
-    }
-      
-    // Anyone can create orders/messages, but only the owner can manage them.
-    match /profiles/{profileId}/(orders|messages)/{docId} {
-      allow create: if true;
-      allow update, delete: if isProfileOwner(profileId);
-    }
-      
-    // Anyone (the API) can create visitor logs, but only the owner can manage them.
-    match /profiles/{profileId}/visitors/{visitorId} {
-       allow create: if true;
-       allow delete: if isProfileOwner(profileId);
+      allow read, write: if true;
     }
   }
 }
