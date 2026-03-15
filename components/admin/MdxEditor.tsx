@@ -31,7 +31,7 @@ import { gitprofileConfig } from '../../gitprofile.config';
 function InitializedMDXEditor({
   editorRef,
   ...props
-}: { editorRef: ForwardedRef<MDXEditorMethods> | null } & MDXEditorProps) {
+}: { editorRef?: ForwardedRef<MDXEditorMethods> | null } & MDXEditorProps) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
