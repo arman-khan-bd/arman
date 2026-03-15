@@ -46,6 +46,7 @@ export const OrderModal = ({ isOpen, onClose, projectName, profileId }: OrderMod
       email,
       phone,
       isUrgent,
+      status: 'Pending',
       createdAt: new Date().toISOString(),
     };
 

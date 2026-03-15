@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Trash2, ShoppingCart, AlertTriangle, Mail, Phone } from 'lucide-react';
+import { Trash2, ShoppingCart, AlertTriangle, Mail, Phone, Check, Play, CheckCircle } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -16,7 +16,16 @@ interface Order {
   description: string;
   isUrgent: boolean;
   createdAt: string;
+  status: 'Pending' | 'Accepted' | 'Processing' | 'Completed' | 'Cancelled';
 }
+
+const statusColors: Record<Order['status'], string> = {
+    Pending: 'badge-warning',
+    Accepted: 'badge-info',
+    Processing: 'badge-primary',
+    Completed: 'badge-success',
+    Cancelled: 'badge-error',
+};
 
 export default function ManageOrdersPage() {
   const { user } = useUser();
@@ -35,6 +44,12 @@ export default function ManageOrdersPage() {
         const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
         deleteDocumentNonBlocking(orderRef);
     }
+  };
+
+  const handleUpdateStatus = (orderId: string, status: Order['status']) => {
+    if (!user) return;
+    const orderRef = doc(firestore, `profiles/${user.uid}/orders/${orderId}`);
+    updateDocumentNonBlocking(orderRef, { status });
   };
 
   return (
@@ -59,8 +74,9 @@ export default function ManageOrdersPage() {
               <div key={order.id} className="p-4 rounded-lg bg-base-200">
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className="font-bold text-lg">{order.projectName}</h3>
+                      {order.status && <div className={`badge ${statusColors[order.status]}`}>{order.status}</div>}
                       {order.isUrgent && <div className="badge badge-error gap-1"><AlertTriangle size={12}/> Urgent</div>}
                       {order.isCustom && <div className="badge badge-info">Customized</div>}
                     </div>
@@ -83,6 +99,24 @@ export default function ManageOrdersPage() {
                     <button onClick={() => handleDelete(order.id)} className="btn btn-sm btn-error">
                       <Trash2 size={16} /> Delete
                     </button>
+                    {/* Status Actions */}
+                    <div className="pt-2 border-t border-base-300 space-y-2">
+                      {order.status === 'Pending' && (
+                          <button onClick={() => handleUpdateStatus(order.id, 'Accepted')} className="btn btn-sm btn-success w-full">
+                              <Check size={16} /> Accept Order
+                          </button>
+                      )}
+                      {order.status === 'Accepted' && (
+                          <button onClick={() => handleUpdateStatus(order.id, 'Processing')} className="btn btn-sm btn-info w-full">
+                              <Play size={16} /> Start Processing
+                          </button>
+                      )}
+                      {order.status === 'Processing' && (
+                          <button onClick={() => handleUpdateStatus(order.id, 'Completed')} className="btn btn-sm btn-primary w-full">
+                              <CheckCircle size={16} /> Mark as Completed
+                          </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
