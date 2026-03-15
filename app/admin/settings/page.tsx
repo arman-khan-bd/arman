@@ -31,6 +31,7 @@ type Profile = {
   profilePhotoUrl?: string;
   resumeUrl?: string;
   githubUsername?: string;
+  phone?: string;
 };
 
 
@@ -270,6 +271,7 @@ export default function ManageSettingsPage() {
                  <input type="text" name="twitterUsername" value={profile.twitterUsername || ''} onChange={handleInputChange} placeholder="Twitter username" className={inputClass} />
                  <input type="text" name="websiteUrl" value={profile.websiteUrl || ''} onChange={handleInputChange} placeholder="https://armankhan.me" className={inputClass} />
                  <input type="email" name="email" value={profile.email || ''} onChange={handleInputChange} placeholder="Email" className={inputClass} />
+                 <input type="text" name="phone" value={profile.phone || ''} onChange={handleInputChange} placeholder="WhatsApp Number" className={inputClass} />
               </div>
             </div>
           )}

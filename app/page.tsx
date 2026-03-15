@@ -35,6 +35,7 @@ type Profile = {
   profilePhotoUrl?: string;
   resumeUrl?: string;
   githubUsername?: string;
+  phone?: string;
 };
 
 
@@ -83,7 +84,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <ThemeSwitcher />
+      <ThemeSwitcher phone={profile?.phone} />
       <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           {/* Sidebar */}

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { gitprofileConfig } from '../gitprofile.config';
 
 const WhatsAppIcon = () => (
     <svg
@@ -15,10 +14,11 @@ const WhatsAppIcon = () => (
     </svg>
 );
 
+interface ThemeSwitcherProps {
+  phone?: string | null;
+}
 
-export const ThemeSwitcher = () => {
-  const { phone } = gitprofileConfig.social;
-
+export const ThemeSwitcher = ({ phone }: ThemeSwitcherProps) => {
   if (!phone) {
     return null;
   }
