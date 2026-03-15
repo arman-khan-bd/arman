@@ -24,9 +24,17 @@ export default function ManageCommentsPage() {
 
   const commentsQuery = useMemoFirebase(() => {
     if (!user) return null;
-    // The orderBy clause was removed to prevent a crash without the required Firestore index.
-    // To re-enable sorting, create the composite index in your Firebase console using the link from the build error.
-    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid));
+    
+    // THIS QUERY IS TEMPORARILY DISABLED TO PREVENT A BUILD ERROR.
+    // The collectionGroup query below requires a Firestore index.
+    // To fix this, you MUST create the index by clicking the link provided in the
+    // build error message in your terminal.
+    // Once the index is created (it takes a few minutes), you can uncomment the line below.
+    
+    // return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid));
+    
+    // Returning null for now to prevent the app from crashing.
+    return null;
   }, [user, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
@@ -50,7 +58,10 @@ export default function ManageCommentsPage() {
           <div className="text-center py-8">
             <MessageSquare className="mx-auto h-12 w-12 text-base-content/30" />
             <h3 className="mt-2 text-sm font-medium text-base-content">No comments</h3>
-            <p className="mt-1 text-sm text-base-content/60">Comments from your blog posts will appear here.</p>
+            <p className="mt-1 text-sm text-base-content/60">
+              Comments from your blog posts will appear here.
+              {!comments && <span className="block mt-2 text-warning font-bold">Note: The comments query is temporarily disabled. Please create the required Firestore index to see your comments.</span>}
+            </p>
           </div>
         )}
         {!isLoading && comments && comments.length > 0 && (
