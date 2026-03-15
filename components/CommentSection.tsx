@@ -27,6 +27,15 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Pre-fill user info from localStorage
+  useEffect(() => {
+    const savedUserInfo = localStorage.getItem('commenterInfo');
+    if (savedUserInfo) {
+      const { fullName, email } = JSON.parse(savedUserInfo);
+      setNewComment(prev => ({ ...prev, fullName, email }));
+    }
+  }, []);
+
   useEffect(() => {
     const fetchComments = async () => {
       if (!profileId || !blogId || !firestore) {
@@ -62,6 +71,26 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
     
     setIsSubmitting(true);
     const createdAt = new Date().toISOString();
+
+    let visitorData = {};
+    try {
+      const response = await fetch('/api/log-visitor', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          visitorData = {
+            ip: result.data.query,
+            country: result.data.country,
+            city: result.data.city,
+            countryCode: result.data.countryCode,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Could not fetch visitor IP for comment:", error);
+      // Continue without IP data
+    }
+
     const commentData = {
       ...newComment,
       profileId,
@@ -69,6 +98,7 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
       blogSlug,
       createdAt,
       ownerId: profileId, // for rules
+      ...visitorData,
     };
 
     // Optimistic UI update
@@ -84,8 +114,11 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
     
     try {
       addDocumentNonBlocking(commentsCollection, commentData);
+      // Save user info to localStorage for next time
+      localStorage.setItem('commenterInfo', JSON.stringify({ fullName: newComment.fullName, email: newComment.email }));
     } finally {
-      setNewComment({ fullName: '', email: '', text: '' });
+      // Clear only the text field, keep user details for convenience
+      setNewComment(prev => ({ ...prev, text: '' }));
       setIsSubmitting(false);
     }
   };

@@ -6,6 +6,7 @@ import { collectionGroup, doc, query, orderBy, where } from 'firebase/firestore'
 import { format } from 'date-fns';
 import { Trash2, MessageSquare, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Comment {
   id: string;
@@ -16,6 +17,10 @@ interface Comment {
   blogSlug: string;
   blogId: string;
   profileId: string;
+  ip?: string;
+  city?: string;
+  country?: string;
+  countryCode?: string;
 }
 
 export default function ManageCommentsPage() {
@@ -25,16 +30,12 @@ export default function ManageCommentsPage() {
   const commentsQuery = useMemoFirebase(() => {
     if (!user) return null;
     
-    // THIS QUERY IS TEMPORARILY DISABLED TO PREVENT A BUILD ERROR.
-    // The collectionGroup query below requires a Firestore index.
-    // To fix this, you MUST create the index by clicking the link provided in the
-    // build error message in your terminal.
-    // Once the index is created (it takes a few minutes), you can uncomment the line below.
-    
-    // return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid));
-    
-    // Returning null for now to prevent the app from crashing.
-    return null;
+    // IMPORTANT: This query requires a custom Firestore index.
+    // If the app crashes or you see a 'permission-denied' error in your browser 
+    // console, it will include a link to create the necessary index in your 
+    // Firebase project. Click that link and wait a few minutes for it to build.
+    // You only need to do this once.
+    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid), orderBy('createdAt', 'desc'));
   }, [user, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
@@ -60,7 +61,7 @@ export default function ManageCommentsPage() {
             <h3 className="mt-2 text-sm font-medium text-base-content">No comments</h3>
             <p className="mt-1 text-sm text-base-content/60">
               Comments from your blog posts will appear here.
-              {!comments && <span className="block mt-2 text-warning font-bold">Note: The comments query is temporarily disabled. Please create the required Firestore index to see your comments.</span>}
+              {!comments && <span className="block mt-2 text-warning font-bold">Note: If this page is blank, please check your browser's developer console for a link to create the required Firestore index.</span>}
             </p>
           </div>
         )}
@@ -68,17 +69,32 @@ export default function ManageCommentsPage() {
           <div className="space-y-4">
             {comments.map(comment => (
               <div key={comment.id} className="p-4 rounded-lg bg-base-200">
-                <div className="flex justify-between items-start">
-                    <div>
+                <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
                         <p className="text-sm text-base-content/80 mb-2">{comment.text}</p>
-                        <div className="flex items-center gap-4 text-xs text-base-content/60">
+                        <div className="flex items-center gap-4 text-xs text-base-content/60 flex-wrap">
                             <span>By: <span className="font-bold">{comment.fullName}</span> ({comment.email})</span>
                             <span>On: {format(new Date(comment.createdAt), 'MMM dd, yyyy')}</span>
+                             {comment.city && comment.country && (
+                              <span className="flex items-center gap-1.5">
+                                {comment.countryCode && (
+                                  <Image
+                                    src={`https://flagcdn.com/w20/${comment.countryCode.toLowerCase()}.png`}
+                                    alt={`${comment.country} flag`}
+                                    width={16}
+                                    height={10}
+                                    className="rounded-sm"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                )}
+                                From: {comment.city}, {comment.country} ({comment.ip})
+                              </span>
+                            )}
                         </div>
                     </div>
-                    <div className="flex gap-2 shrink-0 ml-4">
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
                         <Link href={`/blogs/${comment.blogSlug}`} target="_blank" className="btn btn-sm btn-ghost">
-                            <ExternalLink size={16} /> View Post
+                            <ExternalLink size={16} /> View
                         </Link>
                         <button onClick={() => handleDelete(comment)} className="btn btn-sm btn-error">
                             <Trash2 size={16} />
