@@ -21,10 +21,14 @@ export default function Home() {
         const response = await fetch(`https://api.github.com/users/${gitprofileConfig.github.username}`);
         if (!response.ok) {
           console.error('Error fetching GitHub user data:', response.status, response.statusText);
+          setLoading(false);
           return;
         }
-        const data = await response.json();
-        setUser(data);
+        const text = await response.text();
+        if (text) {
+          const data = JSON.parse(text);
+          setUser(data);
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -39,9 +43,9 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <ThemeSwitcher />
       <main className="flex-1 container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="sm:col-span-1 space-y-4">
             <ProfileCard user={user} />
             <DetailsCard user={user} />
             <SkillsCard />
@@ -50,7 +54,7 @@ export default function Home() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="sm:col-span-2 space-y-8">
             <ProjectsCard />
             <BlogCard />
           </div>
