@@ -6,6 +6,8 @@ import { motion } from 'motion/react';
 import { Calendar, ArrowLeft, ServerCrash } from 'lucide-react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { format } from 'date-fns';
 import { CommentSection } from '../../../components/CommentSection';
 import { RelatedPosts } from '../../../components/RelatedPosts';
@@ -133,7 +135,7 @@ export default function BlogDetailsPage() {
               </div>
 
               <article className="prose lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
-                <ReactMarkdown>{blog.content}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{blog.content}</ReactMarkdown>
               </article>
               
               {profileId && blog.id && blog.slug && <CommentSection profileId={profileId} blogId={blog.id} blogSlug={blog.slug} />}
@@ -151,5 +153,3 @@ export default function BlogDetailsPage() {
     </div>
   );
 }
-
-    
