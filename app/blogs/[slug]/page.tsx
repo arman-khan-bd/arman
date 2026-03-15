@@ -13,7 +13,7 @@ import { CommentSection } from '../../../components/CommentSection';
 import { RelatedPosts } from '../../../components/RelatedPosts';
 import { CategoriesCard } from '../../../components/CategoriesCard';
 import { TagsCard } from '../../../components/TagsCard';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
 interface Blog {
@@ -33,36 +33,59 @@ export default function BlogDetailsPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const firestore = useFirestore();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
+    const fetchBlogData = async () => {
+      if (!firestore || !slug) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+
+      try {
+        // First, get the profileId
         const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
+        const profileQuery = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(profileQuery);
+        
+        let fetchedProfileId: string | null = null;
         if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
+          fetchedProfileId = profileSnapshot.docs[0].id;
+          setProfileId(fetchedProfileId);
+        } else {
+            setIsLoading(false);
+            return;
         }
+        
+        // Then, get the blog post using the profileId
+        const blogQuery = query(
+          collection(firestore, `profiles/${fetchedProfileId}/blogs`),
+          where('slug', '==', decodeURIComponent(slug)),
+          firestoreLimit(1)
+        );
+        const blogSnapshot = await getDocs(blogQuery);
+        
+        if (!blogSnapshot.empty) {
+          setBlog({ id: blogSnapshot.docs[0].id, ...blogSnapshot.docs[0].data() } as Blog);
+        } else {
+          setBlog(null);
+        }
+      } catch(error) {
+        console.error("Error fetching blog details:", error);
+        setBlog(null);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProfile();
-  }, [firestore]);
+    fetchBlogData();
+  }, [firestore, slug]);
 
-  const blogQuery = useMemoFirebase(() => {
-    if (!slug || !profileId || !firestore) return null;
-    return query(
-      collection(firestore, `profiles/${profileId}/blogs`),
-      where('slug', '==', decodeURIComponent(slug)),
-      firestoreLimit(1)
-    );
-  }, [slug, profileId, firestore]);
 
-  const { data: blogs, isLoading } = useCollection<Blog>(blogQuery);
-  const blog = blogs?.[0];
-
-  if (isLoading || !profileId) {
+  if (isLoading || (!blog && isLoading)) {
     return (
        <div className="min-h-screen flex items-center justify-center bg-base-200">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

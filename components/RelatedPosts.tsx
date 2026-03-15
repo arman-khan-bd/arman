@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { BookCopy } from 'lucide-react';
 import { format } from 'date-fns';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
 
 interface RelatedPostsProps {
@@ -12,40 +12,54 @@ interface RelatedPostsProps {
 }
 
 interface Blog {
+  id: string;
   slug: string;
   title: string;
   date: string;
 }
 
 export const RelatedPosts = ({ currentSlug }: RelatedPostsProps) => {
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [latestPosts, setLatestPosts] = useState<Blog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
+    if (!firestore) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch profile ID
         const profilesCollection = collection(firestore, 'profiles');
         const q = query(profilesCollection, firestoreLimit(1));
         const profileSnapshot = await getDocs(q);
+        
         if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
+          const profileId = profileSnapshot.docs[0].id;
+          
+          // Fetch posts
+          const blogsQuery = query(
+              collection(firestore, `profiles/${profileId}/blogs`),
+              orderBy('date', 'desc'),
+              firestoreLimit(4)
+          );
+          const snapshot = await getDocs(blogsQuery);
+          const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Blog[];
+          setLatestPosts(postsData);
         }
+      } catch (error) {
+        console.error("Error fetching related posts:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProfile();
+
+    fetchPosts();
   }, [firestore]);
 
-  const blogsQuery = useMemoFirebase(() => {
-    if (!profileId) return null;
-    return query(
-        collection(firestore, `profiles/${profileId}/blogs`),
-        orderBy('date', 'desc'),
-        firestoreLimit(4)
-    );
-  }, [profileId, firestore]);
-
-  const { data: latestPosts, isLoading } = useCollection<Blog>(blogsQuery);
-  
   const relatedPosts = useMemo(() => {
     return latestPosts?.filter(p => p.slug !== currentSlug).slice(0, 3)
   }, [latestPosts, currentSlug]);

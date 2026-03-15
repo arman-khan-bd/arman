@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, query, limit as firestoreLimit, orderBy, getDocs } from 'firebase/firestore';
 
 interface Blog {
   id: string;
@@ -34,20 +34,38 @@ export const BlogCard = ({
   showSeeAll = true,
   profileId
 }: BlogCardProps) => {
+  const [posts, setPosts] = useState<Blog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
-  const blogsQuery = useMemoFirebase(() => {
-    if (!profileId) return null;
-    let q = query(collection(firestore, `profiles/${profileId}/blogs`), orderBy('date', 'desc'));
-    if (limit > 0) {
-      q = query(q, firestoreLimit(limit));
+  useEffect(() => {
+    if (!profileId || !firestore) {
+      setIsLoading(false);
+      return;
     }
-    return q;
+
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      try {
+        let q = query(collection(firestore, `profiles/${profileId}/blogs`), orderBy('date', 'desc'));
+        if (limit > 0) {
+          q = query(q, firestoreLimit(limit));
+        }
+        const snapshot = await getDocs(q);
+        const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Blog[];
+        setPosts(postsData);
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        setPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, [profileId, firestore, limit]);
 
-  const { data: posts, isLoading } = useCollection<Blog>(blogsQuery);
-
-  if (isLoading && !posts) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...Array(limit > 0 ? limit : 2)].map((_, i) => (

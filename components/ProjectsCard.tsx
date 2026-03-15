@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { gitprofileConfig } from '../gitprofile.config';
+import React, { useState, useEffect } from 'react';
 import { Folder, Globe, ShoppingCart, Github } from 'lucide-react';
 import { motion } from 'motion/react';
 import { OrderModal } from './OrderModal';
 import Link from 'next/link';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, query, limit as firestoreLimit, orderBy, getDocs } from 'firebase/firestore';
 
 interface Project {
   id: string;
@@ -32,20 +31,40 @@ export const ProjectsCard = ({
   profileId
 }: ProjectsCardProps) => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
-  const projectsQuery = useMemoFirebase(() => {
-    if (!profileId) return null;
-    const q = query(collection(firestore, `profiles/${profileId}/projects`), orderBy('name'));
-    return limit > 0 ? query(q, firestoreLimit(limit)) : q;
+  useEffect(() => {
+    if (!profileId || !firestore) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const fetchProjects = async () => {
+      setIsLoading(true);
+      try {
+        const projectsQuery = query(collection(firestore, `profiles/${profileId}/projects`), orderBy('name'));
+        const q = limit > 0 ? query(projectsQuery, firestoreLimit(limit)) : projectsQuery;
+        
+        const snapshot = await getDocs(q);
+        const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Project[];
+        setProjects(projectsData);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        setProjects([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
   }, [profileId, firestore, limit]);
 
-  const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
-
-  if (isLoading && !projects) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[...Array(limit || 4)].map((_, i) => (
+        {[...Array(limit > 0 ? limit : 4)].map((_, i) => (
           <div key={i} className="card h-48 animate-pulse bg-base-300" />
         ))}
       </div>
@@ -76,7 +95,7 @@ export const ProjectsCard = ({
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {projects?.map((project, index) => (
+        {projects.map((project, index) => (
           <motion.div
             key={project.id}
             initial={{ opacity: 0, scale: 0.95 }}

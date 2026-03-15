@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { OrderModal } from '../../../components/OrderModal';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import type { ProjectDetail } from '../../../data/projects';
 import ReactMarkdown from 'react-markdown';
@@ -29,34 +29,56 @@ export default function ProjectDetailsPage() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
 
   const firestore = useFirestore();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
+    const fetchProjectData = async () => {
+      if (!firestore || !projectName) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+
+      try {
         const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
+        const profileQuery = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(profileQuery);
+        
+        let fetchedProfileId: string | null = null;
         if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
+          fetchedProfileId = profileSnapshot.docs[0].id;
+          setProfileId(fetchedProfileId);
+        } else {
+            setIsLoading(false);
+            return;
         }
+
+        const projectQuery = query(
+          collection(firestore, `profiles/${fetchedProfileId}/projects`), 
+          where('name', '==', decodeURIComponent(projectName)),
+          firestoreLimit(1)
+        );
+        const projectSnapshot = await getDocs(projectQuery);
+        
+        if (!projectSnapshot.empty) {
+          setProject({ id: projectSnapshot.docs[0].id, ...projectSnapshot.docs[0].data() } as ProjectDetail);
+        } else {
+          setProject(null);
+        }
+      } catch(error) {
+        console.error("Error fetching project details:", error);
+        setProject(null);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProfile();
-  }, [firestore]);
-  
-  const projectQuery = useMemoFirebase(() => {
-    if (!projectName || !profileId) return null;
-    return query(
-      collection(firestore, `profiles/${profileId}/projects`), 
-      where('name', '==', decodeURIComponent(projectName))
-    );
-  }, [projectName, profileId, firestore]);
-
-  const { data: projects, isLoading } = useCollection<ProjectDetail>(projectQuery);
-  const project = projects?.[0];
+    
+    fetchProjectData();
+  }, [firestore, projectName]);
 
   const nextImage = () => {
     if (!project || project.screenshots.length === 0) return;
@@ -68,7 +90,7 @@ export default function ProjectDetailsPage() {
     setCurrentImageIndex((prev) => (prev - 1 + project.screenshots.length) % project.screenshots.length);
   };
 
-  if (isLoading || !profileId) {
+  if (isLoading) {
     return (
        <div className="min-h-screen flex items-center justify-center bg-base-200">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

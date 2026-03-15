@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { Tag } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
 interface BlogForTags {
@@ -10,35 +10,40 @@ interface BlogForTags {
 }
 
 export const TagsCard = () => {
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (firestore) {
+    if (!firestore) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchBlogsForTags = async () => {
+      setIsLoading(true);
+      try {
         const profilesCollection = collection(firestore, 'profiles');
-        const q = query(profilesCollection, firestoreLimit(1));
-        const profileSnapshot = await getDocs(q);
+        const profileQuery = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(profileQuery);
+        
         if (!profileSnapshot.empty) {
-          setProfileId(profileSnapshot.docs[0].id);
+          const profileId = profileSnapshot.docs[0].id;
+          const blogsQuery = query(collection(firestore, `profiles/${profileId}/blogs`));
+          const blogsSnapshot = await getDocs(blogsQuery);
+          const blogsData = blogsSnapshot.docs.map(doc => doc.data()) as BlogForTags[];
+          const allTags = blogsData.flatMap(blog => blog.tags || []);
+          setTags([...new Set(allTags)]);
         }
+      } catch (e) {
+        console.error("Error fetching tags:", e);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProfile();
+    fetchBlogsForTags();
   }, [firestore]);
-  
-  const blogsQuery = useMemoFirebase(() => {
-    if (!profileId) return null;
-    return query(collection(firestore, `profiles/${profileId}/blogs`));
-  }, [profileId, firestore]);
-  
-  const { data: blogs, isLoading } = useCollection<BlogForTags>(blogsQuery);
 
-  const tags = useMemo(() => {
-    if (!blogs) return [];
-    const allTags = blogs.flatMap(blog => blog.tags || []);
-    return [...new Set(allTags)];
-  }, [blogs]);
 
   if (isLoading) {
     return <div className="card p-6 h-32 animate-pulse bg-base-300" />;
