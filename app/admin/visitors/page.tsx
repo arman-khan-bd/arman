@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, orderBy } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { useUser, useFirestore, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Trash2, Globe } from 'lucide-react';
 import Image from 'next/image';
@@ -21,18 +21,39 @@ interface Visitor {
 export default function ManageVisitorsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const visitorsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `profiles/${user.uid}/visitors`), orderBy('timestamp', 'desc'));
+  useEffect(() => {
+    const fetchVisitors = async () => {
+      if (!user || !firestore) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const visitorsQuery = query(collection(firestore, `profiles/${user.uid}/visitors`), orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(visitorsQuery);
+        const visitorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Visitor[];
+        setVisitors(visitorsData);
+      } catch (error) {
+        console.error("Error fetching visitors:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user && firestore) {
+      fetchVisitors();
+    }
   }, [user, firestore]);
-
-  const { data: visitors, isLoading } = useCollection<Visitor>(visitorsQuery);
 
   const handleDelete = (visitorId: string) => {
     if (!user) return;
     const visitorRef = doc(firestore, `profiles/${user.uid}/visitors/${visitorId}`);
     deleteDocumentNonBlocking(visitorRef);
+    // Optimistically update the UI
+    setVisitors(prevVisitors => prevVisitors.filter(visitor => visitor.id !== visitorId));
   };
 
   return (
@@ -40,7 +61,7 @@ export default function ManageVisitorsPage() {
       <h1 className="text-3xl font-bold mb-6">Visitors</h1>
       <div className="card p-6">
         {isLoading && (
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center py-8">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
@@ -101,5 +122,3 @@ export default function ManageVisitorsPage() {
     </div>
   );
 }
-
-    
