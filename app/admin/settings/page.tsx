@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Braces, Globe, Search, User, Share2, Loader } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { gitprofileConfig } from '../../../gitprofile.config';
 
 // Define a type for the profile, mirroring the backend.json entity
 type Profile = {
@@ -26,6 +27,7 @@ type Profile = {
   email?: string;
   profilePhotoUrl?: string;
   resumeUrl?: string;
+  githubUsername?: string;
 };
 
 
@@ -47,11 +49,12 @@ export default function ManageSettingsPage() {
   useEffect(() => {
     if (profileData) {
       setProfile(profileData);
-    } else if (!isLoading) {
+    } else if (!isLoading && user) {
       // If no data and not loading, initialize a default profile structure for a new user
       setProfile({
-        ownerId: user?.uid,
-        id: user?.uid
+        ownerId: user.uid,
+        id: user.uid,
+        githubUsername: gitprofileConfig.github.username,
       });
     }
   }, [profileData, isLoading, user]);
@@ -62,13 +65,14 @@ export default function ManageSettingsPage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!profileRef || !profile) return;
+    if (!profileRef || !profile || !user) return;
     setIsSaving(true);
     
-    const dataToSave = {
+    const dataToSave: Profile = {
       ...profile,
-      ownerId: user?.uid,
-      id: user?.uid
+      ownerId: user.uid,
+      id: user.uid,
+      githubUsername: gitprofileConfig.github.username,
     };
 
     setDocumentNonBlocking(profileRef, dataToSave, { merge: true });
