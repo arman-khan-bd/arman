@@ -6,6 +6,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking 
 import { doc } from 'firebase/firestore';
 import { gitprofileConfig } from '../../../gitprofile.config';
 import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
+import { useIsMobile } from '../../../hooks/use-mobile';
 
 
 // Define a type for the profile, mirroring the backend.json entity
@@ -37,6 +38,7 @@ export default function ManageSettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isMobile = useIsMobile();
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -111,6 +113,49 @@ export default function ManageSettingsPage() {
 
   const { cloudName, uploadPreset } = gitprofileConfig.cloudinary;
 
+  const renderTabs = () => {
+    if (isMobile === undefined) {
+      return <div className="h-[53px] p-4 border-b border-base-300"><div className="h-full bg-base-200 rounded animate-pulse"></div></div>;
+    }
+
+    if (isMobile) {
+      return (
+        <div className="p-4 border-b border-base-300">
+          <select
+            className="w-full p-3 bg-base-200 border border-base-300 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+          >
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex border-b border-base-300 overflow-x-auto">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors shrink-0 ${
+              activeTab === tab.id
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-base-content/60 hover:text-primary'
+            }`}
+          >
+            <tab.icon size={16} />
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -122,22 +167,7 @@ export default function ManageSettingsPage() {
       </div>
       <div className="card">
         {/* Tabs Navigation */}
-        <div className="flex border-b border-base-300 overflow-x-auto">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors shrink-0 ${
-                activeTab === tab.id
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-base-content/60 hover:text-primary'
-              }`}
-            >
-              <tab.icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
+        {renderTabs()}
 
         {/* Tabs Content */}
         <div className="p-6 lg:p-8">
