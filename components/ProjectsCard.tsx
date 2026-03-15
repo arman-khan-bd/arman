@@ -2,22 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
-import { Star, GitFork, Folder, ExternalLink, ShoppingCart, Globe } from 'lucide-react';
+import { Folder, Globe, ShoppingCart, Github } from 'lucide-react';
 import { motion } from 'motion/react';
 import { OrderModal } from './OrderModal';
-
 import Link from 'next/link';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
 
-interface Repo {
-  id: number;
+interface Project {
+  id: string;
   name: string;
   description: string;
-  stargazers_count: number;
-  forks_count: number;
-  html_url: string;
-  language: string;
-  fork: boolean;
-  updated_at: string;
+  techStack?: string[];
+  repoUrl?: string;
+  liveUrl?: string;
 }
 
 interface ProjectsCardProps {
@@ -27,60 +25,37 @@ interface ProjectsCardProps {
 }
 
 export const ProjectsCard = ({ 
-  limit = gitprofileConfig.github.limit, 
+  limit = 0, 
   showTitle = true,
   showSeeAll = true 
 }: ProjectsCardProps) => {
-  const [repos, setRepos] = useState<Repo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const firestore = useFirestore();
 
   useEffect(() => {
-    const fetchRepos = async () => {
-      try {
-        const response = await fetch(
-          `https://api.github.com/users/${gitprofileConfig.github.username}/repos?per_page=100`
-        );
-        if (!response.ok) {
-          console.error('Error fetching GitHub repos data:', response.status, response.statusText);
-          return;
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
         }
-        let data: Repo[] = await response.json();
-
-        if (gitprofileConfig.github.exclude.forks) {
-          data = data.filter((repo) => !repo.fork);
-        }
-
-        if (gitprofileConfig.github.exclude.projects.length > 0) {
-          data = data.filter(
-            (repo) => !gitprofileConfig.github.exclude.projects.includes(repo.name)
-          );
-        }
-
-        data.sort((a, b) => {
-          if (gitprofileConfig.github.sortBy === 'stars') {
-            return b.stargazers_count - a.stargazers_count;
-          } else {
-            return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-          }
-        });
-
-        if (limit) {
-          setRepos(data.slice(0, limit));
-        } else {
-          setRepos(data);
-        }
-      } catch (error) {
-        console.error('Error fetching repos:', error);
-      } finally {
-        setLoading(false);
       }
     };
+    fetchProfile();
+  }, [firestore]);
 
-    fetchRepos();
-  }, [limit]);
+  const projectsQuery = useMemoFirebase(() => {
+    if (!profileId) return null;
+    const q = query(collection(firestore, `profiles/${profileId}/projects`), orderBy('name'));
+    return limit ? query(q, firestoreLimit(limit)) : q;
+  }, [profileId, firestore, limit]);
 
-  if (loading) {
+  const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
+
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...Array(limit || 4)].map((_, i) => (
@@ -111,9 +86,9 @@ export const ProjectsCard = ({
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {repos.map((repo, index) => (
+        {projects?.map((project, index) => (
           <motion.div
-            key={repo.id}
+            key={project.id}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -124,49 +99,52 @@ export const ProjectsCard = ({
               <div className="flex items-center gap-2 mb-2">
                 <Folder size={18} className="text-primary" />
                 <Link 
-                  href={`/projects/${encodeURIComponent(repo.name)}`}
+                  href={`/projects/${encodeURIComponent(project.name)}`}
                   className="font-bold hover:text-primary transition-colors truncate"
                 >
-                  {repo.name}
+                  {project.name}
                 </Link>
               </div>
               <p className="text-sm text-base-content/60 line-clamp-2 mb-4 h-10">
-                {repo.description || 'No description available'}
+                {project.description || 'No description available'}
               </p>
             </div>
             
             <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4 text-xs font-medium text-base-content/50">
-                  <div className="flex items-center gap-1">
-                    <Star size={14} />
-                    <span>{repo.stargazers_count}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <GitFork size={14} />
-                    <span>{repo.forks_count}</span>
-                  </div>
+               {project.techStack && project.techStack.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                    {project.techStack.slice(0, 5).map(tech => (
+                        <span key={tech} className="px-2 py-0.5 bg-base-200 rounded text-[10px] font-bold">
+                            {tech}
+                        </span>
+                    ))}
                 </div>
-                {repo.language && (
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-primary/40" />
-                    <span className="text-xs font-medium text-base-content/70">{repo.language}</span>
-                  </div>
-                )}
-              </div>
+               )}
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-base-300">
-                <a
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-base-200 hover:bg-base-300 text-sm font-bold transition-colors"
-                >
-                  <Globe size={16} />
-                  <span>Live</span>
-                </a>
+              <div className="grid grid-cols-2 gap-2 pt-4 border-t border-base-300">
+                {project.liveUrl ? (
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-base-200 hover:bg-base-300 text-sm font-bold transition-colors"
+                  >
+                    <Globe size={16} />
+                    <span>Live</span>
+                  </a>
+                ) : (
+                  <a
+                    href={project.repoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-base-200 hover:bg-base-300 text-sm font-bold transition-colors"
+                  >
+                    <Github size={16} />
+                    <span>Source</span>
+                  </a>
+                )}
                 <button
-                  onClick={() => setSelectedProject(repo.name)}
+                  onClick={() => setSelectedProject(project.name)}
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-primary text-primary-content text-sm font-bold transition-all hover:opacity-90 active:scale-95"
                 >
                   <ShoppingCart size={16} />
@@ -180,3 +158,5 @@ export const ProjectsCard = ({
     </div>
   );
 };
+
+    

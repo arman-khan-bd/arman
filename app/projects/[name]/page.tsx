@@ -1,44 +1,96 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  Clock, 
-  Layers, 
-  CheckCircle2, 
-  ArrowRightCircle, 
+  Layers,
   ArrowLeft,
   Globe,
-  ShoppingCart
+  ShoppingCart,
+  Github,
+  ServerCrash
 } from 'lucide-react';
 import Image from 'next/image';
-import { getProjectDetails } from '../../../data/projects';
 import { OrderModal } from '../../../components/OrderModal';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import type { ProjectDetail } from '../../../data/projects';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const projectName = params.name as string;
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
-  const project = useMemo(() => {
-    if (!projectName) return null;
-    return getProjectDetails(decodeURIComponent(projectName));
-  }, [projectName]);
+  const firestore = useFirestore();
 
-  if (!project) return null;
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
+        }
+      }
+    };
+    fetchProfile();
+  }, [firestore]);
+  
+  const projectQuery = useMemoFirebase(() => {
+    if (!projectName || !profileId) return null;
+    return query(
+      collection(firestore, `profiles/${profileId}/projects`), 
+      where('name', '==', decodeURIComponent(projectName))
+    );
+  }, [projectName, profileId, firestore]);
+
+  const { data: projects, isLoading } = useCollection<ProjectDetail>(projectQuery);
+  const project = projects?.[0];
 
   const nextImage = () => {
+    if (!project || project.screenshots.length === 0) return;
     setCurrentImageIndex((prev) => (prev + 1) % project.screenshots.length);
   };
 
   const prevImage = () => {
+    if (!project || project.screenshots.length === 0) return;
     setCurrentImageIndex((prev) => (prev - 1 + project.screenshots.length) % project.screenshots.length);
   };
+
+  if (isLoading || !profileId) {
+    return (
+       <div className="min-h-screen flex items-center justify-center bg-base-200">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <ServerCrash size={64} className="text-primary mb-4" />
+        <h1 className="text-3xl font-bold">Project Not Found</h1>
+        <p className="text-base-content/60 mt-2">
+          The project you're looking for doesn't seem to exist.
+        </p>
+        <button 
+            onClick={() => router.back()}
+            className="mt-8 flex items-center gap-2 text-sm font-bold btn btn-primary"
+          >
+            <ArrowLeft size={18} />
+            <span>Go Back</span>
+          </button>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-base-100 pb-20">
@@ -69,115 +121,74 @@ export default function ProjectDetailsPage() {
           {/* Left Column: Carousel & Description */}
           <div className="lg:col-span-2 space-y-8">
             {/* Carousel */}
-            <div className="relative aspect-video bg-base-300 rounded-2xl overflow-hidden group shadow-xl">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentImageIndex}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="absolute inset-0"
-                >
-                  <Image
-                    src={project.screenshots[currentImageIndex]}
-                    alt={`${project.name} screenshot ${currentImageIndex + 1}`}
-                    fill
-                    className="object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </motion.div>
-              </AnimatePresence>
+             {project.screenshots && project.screenshots.length > 0 && (
+              <div className="relative aspect-video bg-base-300 rounded-2xl overflow-hidden group shadow-xl">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentImageIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={project.screenshots[currentImageIndex]}
+                      alt={`${project.name} screenshot ${currentImageIndex + 1}`}
+                      fill
+                      className="object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
+                </AnimatePresence>
 
-              {/* Controls */}
-              <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={prevImage}
-                  className="p-2 bg-black/50 text-white rounded-full backdrop-blur-sm hover:bg-black/70 transition-all"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button 
-                  onClick={nextImage}
-                  className="p-2 bg-black/50 text-white rounded-full backdrop-blur-sm hover:bg-black/70 transition-all"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </div>
+                {project.screenshots.length > 1 && (
+                  <>
+                    <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={prevImage}
+                        className="p-2 bg-black/50 text-white rounded-full backdrop-blur-sm hover:bg-black/70 transition-all"
+                      >
+                        <ChevronLeft size={24} />
+                      </button>
+                      <button 
+                        onClick={nextImage}
+                        className="p-2 bg-black/50 text-white rounded-full backdrop-blur-sm hover:bg-black/70 transition-all"
+                      >
+                        <ChevronRight size={24} />
+                      </button>
+                    </div>
 
-              {/* Indicators */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {project.screenshots.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentImageIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      i === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
-                    }`}
-                  />
-                ))}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {project.screenshots.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentImageIndex(i)}
+                          className={`w-2 h-2 rounded-full transition-all ${
+                            i === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
+            )}
+
 
             {/* Description */}
             <section className="card p-8 border border-base-300 bg-base-100">
               <h2 className="text-2xl font-bold mb-4">About the Project</h2>
               <p className="text-base-content/70 leading-relaxed">
-                {project.longDescription}
+                {project.longDescription || project.description}
               </p>
             </section>
-
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Current Features */}
-              <section className="card p-6 border border-base-300 bg-base-100">
-                <div className="flex items-center gap-2 mb-4 text-green-500">
-                  <CheckCircle2 size={20} />
-                  <h3 className="font-bold">Current Features</h3>
-                </div>
-                <ul className="space-y-3">
-                  {project.features.current.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-base-content/70">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {/* Future Build */}
-              <section className="card p-6 border border-base-300 bg-base-100">
-                <div className="flex items-center gap-2 mb-4 text-blue-500">
-                  <ArrowRightCircle size={20} />
-                  <h3 className="font-bold">Future Build</h3>
-                </div>
-                <ul className="space-y-3">
-                  {project.features.future.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-base-content/70">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </div>
           </div>
 
           {/* Right Column: Stats & Actions */}
           <div className="space-y-6">
-            {/* Quick Stats */}
             <div className="card p-6 border border-base-300 bg-base-100 space-y-6 sticky top-24">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                    <Clock size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-base-content/50 uppercase font-bold tracking-wider">Build Time</p>
-                    <p className="font-bold">{project.daysToBuild} Days</p>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-secondary/10 text-secondary rounded-lg">
                     <Layers size={20} />
@@ -203,14 +214,28 @@ export default function ProjectDetailsPage() {
                   <ShoppingCart size={18} />
                   <span>Order Now</span>
                 </button>
-                <a 
-                  href="#" 
-                  target="_blank"
-                  className="w-full py-4 bg-base-200 hover:bg-base-300 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
-                >
-                  <Globe size={18} />
-                  <span>Live Preview</span>
-                </a>
+                {project.liveUrl && (
+                  <a 
+                    href={project.liveUrl} 
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-4 bg-base-200 hover:bg-base-300 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Globe size={18} />
+                    <span>Live Preview</span>
+                  </a>
+                )}
+                {project.repoUrl && (
+                  <a 
+                    href={project.repoUrl} 
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-4 bg-base-200 hover:bg-base-300 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Github size={18} />
+                    <span>View Source</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -220,3 +245,5 @@ export default function ProjectDetailsPage() {
     </div>
   );
 }
+
+    

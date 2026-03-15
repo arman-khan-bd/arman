@@ -384,6 +384,60 @@
         "ownerId",
         "name"
       ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a single portfolio project.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "longDescription": {
+          "type": "string"
+        },
+        "techStack": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repoUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "liveUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "profileId",
+        "ownerId",
+        "name",
+        "description"
+      ]
     }
   },
   "auth": {
@@ -506,6 +560,26 @@
             {
               "name": "skillId",
               "description": "Unique identifier for the skill."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/profiles/{profileId}/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores portfolio projects for a specific user profile. Each document includes 'profileId' to link to its parent and a denormalized 'ownerId' from the parent Profile for authorization independence. These are publicly readable but editable only by the profile's 'ownerId'.",
+          "params": [
+            {
+              "name": "profileId",
+              "description": "Identifier of the parent Profile."
+            },
+            {
+              "name": "projectId",
+              "description": "Unique identifier for the project."
             }
           ]
         }
