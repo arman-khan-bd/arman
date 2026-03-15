@@ -30,12 +30,12 @@ export default function ManageCommentsPage() {
   const commentsQuery = useMemoFirebase(() => {
     if (!user) return null;
     
-    // IMPORTANT: This query requires a custom Firestore index.
-    // If the app crashes or you see a 'permission-denied' error in your browser 
-    // console, it will include a link to create the necessary index in your 
-    // Firebase project. Click that link and wait a few minutes for it to build.
-    // You only need to do this once.
-    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid), orderBy('createdAt', 'desc'));
+    // IMPORTANT: This query requires a custom Firestore index. The app may crash if
+    // the index is not created. Please use the link from the build error or your
+    // browser's developer console to create the index.
+    // The `orderBy` clause is temporarily removed to prevent crashes. Once the index
+    // is built, you can add `, orderBy('createdAt', 'desc')` back to the query.
+    return query(collectionGroup(firestore, 'comments'), where('profileId', '==', user.uid));
   }, [user, firestore]);
 
   const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
@@ -61,7 +61,7 @@ export default function ManageCommentsPage() {
             <h3 className="mt-2 text-sm font-medium text-base-content">No comments</h3>
             <p className="mt-1 text-sm text-base-content/60">
               Comments from your blog posts will appear here.
-              {!comments && <span className="block mt-2 text-warning font-bold">Note: If this page is blank, please check your browser's developer console for a link to create the required Firestore index.</span>}
+              <span className="block mt-2 text-warning font-bold">Note: This page requires a Firestore index. If the page is blank or crashes, please check your build logs or browser console for an error message containing a link to create the required index.</span>
             </p>
           </div>
         )}
