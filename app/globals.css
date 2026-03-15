@@ -1,3 +1,4 @@
+@import '@mdxeditor/editor/style.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,6 +42,33 @@
 @layer base {
   body {
     @apply bg-base-200 text-base-content font-sans transition-colors duration-300;
+  }
+   .mdxeditor-toolbar {
+    background-color: hsl(var(--base-200));
+    border-color: hsl(var(--base-300));
+  }
+  .mdxeditor-toolbar button {
+    color: hsl(var(--base-content));
+  }
+  .mdxeditor-toolbar button:hover {
+    background-color: hsl(var(--base-300));
+  }
+  .mdxeditor-active-toolbar-button {
+     background-color: hsl(var(--base-300));
+  }
+  .mdxeditor-root-container {
+    background-color: hsl(var(--base-100));
+    border-color: hsl(var(--base-300));
+    color: hsl(var(--base-content));
+    border-radius: 0.75rem;
+    border-width: 1px;
+    font-family: inherit;
+  }
+  .mdxeditor-root-container .mdxeditor-placeholder {
+    color: hsl(var(--base-content) / 0.5);
+  }
+  .dark-theme .mdxeditor-root-container {
+    background-color: hsl(var(--base-200));
   }
 }
 

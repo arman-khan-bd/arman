@@ -18,6 +18,7 @@ import { OrderModal } from '../../../components/OrderModal';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import type { ProjectDetail } from '../../../data/projects';
+import ReactMarkdown from 'react-markdown';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -179,9 +180,9 @@ export default function ProjectDetailsPage() {
             {/* Description */}
             <section className="card p-8 border border-base-300 bg-base-100">
               <h2 className="text-2xl font-bold mb-4">About the Project</h2>
-              <p className="text-base-content/70 leading-relaxed">
-                {project.longDescription || project.description}
-              </p>
+              <article className="prose lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
+                 <ReactMarkdown>{project.longDescription || project.description}</ReactMarkdown>
+              </article>
             </section>
           </div>
 
@@ -245,5 +246,3 @@ export default function ProjectDetailsPage() {
     </div>
   );
 }
-
-    

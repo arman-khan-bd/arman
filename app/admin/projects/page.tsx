@@ -7,6 +7,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBl
 import { collection, doc } from 'firebase/firestore';
 import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
 import { gitprofileConfig } from '../../../gitprofile.config';
+import MdxEditor from '../../../components/admin/MdxEditor';
 
 const initialProjectState = {
     name: '',
@@ -38,6 +39,10 @@ export default function ManageProjectsPage() {
     const { name, value } = e.target;
     setNewProject(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleMarkdownChange = (value: string) => {
+    setNewProject(prev => ({...prev, longDescription: value}));
+  }
   
   const handleScreenshotUpload = (url: string | null) => {
     if (url) {
@@ -98,7 +103,12 @@ export default function ManageProjectsPage() {
             <input type="text" name="liveUrl" value={newProject.liveUrl} onChange={handleInputChange} placeholder="Live URL" className={inputClass} />
           </div>
           <textarea name="description" value={newProject.description} onChange={handleInputChange} placeholder="Short Description" className={textareaClass} required />
-          <textarea name="longDescription" value={newProject.longDescription} onChange={handleInputChange} placeholder="Long Description (for detail page)" className={textareaClass} />
+          
+          <div>
+            <label className="text-sm font-bold block mb-2">Long Description</label>
+            <MdxEditor markdown={newProject.longDescription} onChange={handleMarkdownChange} placeholder="Full project details (for detail page)..." />
+          </div>
+          
           <textarea name="techStack" value={newProject.techStack} onChange={handleInputChange} placeholder="Tech Stack (comma-separated, e.g., React, Next.js)" className={textareaClass} />
           
           <div>

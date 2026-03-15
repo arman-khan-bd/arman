@@ -7,6 +7,7 @@ import { collection, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { CloudinaryUploader } from '../../../components/admin/CloudinaryUploader';
 import { gitprofileConfig } from '../../../gitprofile.config';
+import MdxEditor from '../../../components/admin/MdxEditor';
 
 const initialBlogState = {
   title: '',
@@ -46,6 +47,10 @@ export default function ManageBlogsPage() {
     const { name, value } = e.target;
     setNewBlog(prev => ({ ...prev, [name]: value }));
   };
+  
+  const handleMarkdownChange = (value: string) => {
+    setNewBlog(prev => ({...prev, content: value}));
+  }
 
   const handleUrlChange = (url: string | null) => {
     setNewBlog(prev => ({ ...prev, cover_image: url || '' }));
@@ -92,7 +97,12 @@ export default function ManageBlogsPage() {
         <form onSubmit={handleAddBlog} className="space-y-4">
           <input type="text" name="title" value={newBlog.title} onChange={handleInputChange} placeholder="Blog Title" className={inputClass} required />
           <textarea name="description" value={newBlog.description} onChange={handleInputChange} placeholder="Short Description / Excerpt" className={textareaClass} required />
-          <textarea name="content" value={newBlog.content} onChange={handleInputChange} placeholder="Full blog content (Markdown supported)" className={`${textareaClass} min-h-[200px]`} required />
+          
+          <div>
+            <label className="text-sm font-bold block mb-2">Blog Content</label>
+            <MdxEditor markdown={newBlog.content} onChange={handleMarkdownChange} placeholder="Full blog content (Markdown supported)..."/>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input type="text" name="categories" value={newBlog.categories} onChange={handleInputChange} placeholder="Categories (comma-separated)" className={inputClass} />
             <input type="text" name="tags" value={newBlog.tags} onChange={handleInputChange} placeholder="Tags (comma-separated)" className={inputClass} />
