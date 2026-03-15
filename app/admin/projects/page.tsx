@@ -104,10 +104,10 @@ export default function ManageProjectsPage() {
           <div>
             <CloudinaryUploader
                 label="Project Screenshots"
-                currentUrl={null}
                 onUrlChange={handleScreenshotUpload}
                 cloudName={cloudName}
                 uploadPreset={uploadPreset}
+                multiple
             />
             {newProject.screenshots.length > 0 && (
                 <div className="mt-4">
