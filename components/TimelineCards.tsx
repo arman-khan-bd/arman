@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
 import { motion } from 'motion/react';
 import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 
 interface Experience {
     id: string;
@@ -34,7 +34,7 @@ export const ExperienceCard = () => {
             try {
                 if (firestore) {
                     const profilesCollection = collection(firestore, 'profiles');
-                    const profileQuery = query(profilesCollection, where('githubUsername', '==', gitprofileConfig.github.username), limit(1));
+                    const profileQuery = query(profilesCollection, limit(1));
                     const profileSnapshot = await getDocs(profileQuery);
 
                     if (!profileSnapshot.empty) {
@@ -45,7 +45,7 @@ export const ExperienceCard = () => {
                         const expData = expSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Experience[];
                         setExperiences(expData);
                     } else {
-                        setExperiences(gitprofileConfig.experiences.map((exp, i) => ({
+                         setExperiences(gitprofileConfig.experiences.map((exp, i) => ({
                             id: `static-${i}`,
                             role: exp.position,
                             companyName: exp.company,
@@ -123,7 +123,7 @@ export const EducationCard = () => {
             try {
                 if (firestore) {
                     const profilesCollection = collection(firestore, 'profiles');
-                    const profileQuery = query(profilesCollection, where('githubUsername', '==', gitprofileConfig.github.username), limit(1));
+                    const profileQuery = query(profilesCollection, limit(1));
                     const profileSnapshot = await getDocs(profileQuery);
 
                     if (!profileSnapshot.empty) {
@@ -180,5 +180,3 @@ export const EducationCard = () => {
         </motion.div>
     );
 };
-
-    

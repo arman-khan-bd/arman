@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { gitprofileConfig } from '../gitprofile.config';
 import { motion } from 'motion/react';
 import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
 interface Skill {
     id: string;
@@ -22,7 +22,7 @@ export const SkillsCard = () => {
             try {
                 if (firestore) {
                     const profilesCollection = collection(firestore, 'profiles');
-                    const q = query(profilesCollection, where('githubUsername', '==', gitprofileConfig.github.username), firestoreLimit(1));
+                    const q = query(profilesCollection, firestoreLimit(1));
                     const profileSnapshot = await getDocs(q);
 
                     if (!profileSnapshot.empty) {
