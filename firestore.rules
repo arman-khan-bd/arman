@@ -2,48 +2,48 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check ownership by reading the ownerId from the parent profile document.
+
+    // --- Allow public read access to everything ---
+    // This is the main fix. It allows your public website to read data.
+    match /{document=**} {
+      allow read: if true;
+    }
+
+    // --- Overwrite with specific write/delete rules for security ---
+
+    // Helper function to check for ownership.
     function isProfileOwner(profileId) {
       return request.auth != null && request.auth.uid == get(/databases/$(database)/documents/profiles/$(profileId)).data.ownerId;
     }
-    
-    // The main profile document. The document ID is the public github username.
+
+    // --- Write rules for collections ---
+
+    // Only the owner can write to their main profile.
     match /profiles/{profileId} {
-      allow read: if true;
-      // Allow writes only if the user is authenticated and their UID matches the ownerId in the document.
       allow write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
     }
     
-    // Admin-managed subcollections (blogs, projects, etc.)
+    // Only the owner can write to these subcollections.
     match /profiles/{profileId}/(skills|workExperiences|educations|projects|blogs)/{docId} {
-      allow read: if true;
-      // Allow writes only by the profile owner.
       allow write: if isProfileOwner(profileId);
     }
       
-    // Comments: public can read/create, only owner can delete.
+    // Anyone can create comments, but only the owner can delete them.
     match /profiles/{profileId}/blogs/{blogId}/comments/{commentId} {
-      allow read, create: if true;
+      allow create: if true;
       allow delete: if isProfileOwner(profileId);
     }
       
-    // Orders: public can create, only owner can manage.
-    match /profiles/{profileId}/orders/{orderId} {
+    // Anyone can create orders/messages, but only the owner can manage them.
+    match /profiles/{profileId}/(orders|messages)/{docId} {
       allow create: if true;
-      allow read, update, delete: if isProfileOwner(profileId);
+      allow update, delete: if isProfileOwner(profileId);
     }
       
-    // Visitors: public can create (via API), only owner can read/delete.
+    // Anyone (the API) can create visitor logs, but only the owner can manage them.
     match /profiles/{profileId}/visitors/{visitorId} {
        allow create: if true;
-       allow read, delete: if isProfileOwner(profileId);
-    }
-      
-    // Messages: public can create, only owner can manage.
-    match /profiles/{profileId}/messages/{messageId} {
-      allow create: if true;
-      allow read, update, delete: if isProfileOwner(profileId);
+       allow delete: if isProfileOwner(profileId);
     }
   }
 }
