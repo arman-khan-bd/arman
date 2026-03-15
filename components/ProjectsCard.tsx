@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Folder, Globe, ShoppingCart, Github } from 'lucide-react';
+import { Folder, Globe, Github, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import { OrderModal } from './OrderModal';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
 import { collection, query, limit as firestoreLimit, orderBy, getDocs } from 'firebase/firestore';
@@ -30,7 +29,6 @@ export const ProjectsCard = ({
   showSeeAll = true,
   profileId
 }: ProjectsCardProps) => {
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
@@ -75,12 +73,6 @@ export const ProjectsCard = ({
 
   return (
     <div className="space-y-6">
-      <OrderModal 
-        isOpen={!!selectedProject} 
-        onClose={() => setSelectedProject(null)} 
-        projectName={selectedProject || ''} 
-        profileId={profileId}
-      />
       {(showTitle || showSeeAll) && (
         <div className="flex justify-between items-center">
           {showTitle && <h2 className="text-xl font-bold">My Projects</h2>}
@@ -152,13 +144,13 @@ export const ProjectsCard = ({
                     <span>Source</span>
                   </a>
                 )}
-                <button
-                  onClick={() => setSelectedProject(project.name)}
+                <Link
+                  href={`/projects/${encodeURIComponent(project.name)}`}
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-primary text-primary-content text-sm font-bold transition-all hover:opacity-90 active:scale-95"
                 >
-                  <ShoppingCart size={16} />
-                  <span>Order Now</span>
-                </button>
+                  <ArrowRight size={16} />
+                  <span>Details</span>
+                </Link>
               </div>
             </div>
           </motion.div>
