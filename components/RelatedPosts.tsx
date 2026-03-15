@@ -1,19 +1,60 @@
 'use client';
 
-import React from 'react';
-import { getBlogs } from '../data/blogs';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { BookCopy } from 'lucide-react';
 import { format } from 'date-fns';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
 
 interface RelatedPostsProps {
   currentSlug: string;
 }
 
+interface Blog {
+  slug: string;
+  title: string;
+  date: string;
+}
+
 export const RelatedPosts = ({ currentSlug }: RelatedPostsProps) => {
-  const relatedPosts = getBlogs(4).filter(p => p.slug !== currentSlug).slice(0, 3);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const firestore = useFirestore();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
+        }
+      }
+    };
+    fetchProfile();
+  }, [firestore]);
+
+  const blogsQuery = useMemoFirebase(() => {
+    if (!profileId) return null;
+    return query(
+        collection(firestore, `profiles/${profileId}/blogs`),
+        orderBy('date', 'desc'),
+        firestoreLimit(4)
+    );
+  }, [profileId, firestore]);
+
+  const { data: latestPosts, isLoading } = useCollection<Blog>(blogsQuery);
   
-  if (relatedPosts.length === 0) return null;
+  const relatedPosts = useMemo(() => {
+    return latestPosts?.filter(p => p.slug !== currentSlug).slice(0, 3)
+  }, [latestPosts, currentSlug]);
+
+  if (isLoading) {
+    return <div className="card p-6 h-40 animate-pulse bg-base-300" />;
+  }
+  
+  if (!relatedPosts || relatedPosts.length === 0) return null;
 
   return (
     <div className="card p-6">

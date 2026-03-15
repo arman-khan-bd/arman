@@ -1,12 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import Image from 'next/image';
-import { getBlogs } from '../data/blogs';
 import Link from 'next/link';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+
+interface Blog {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  date: string; // ISO 8601 format
+  cover_image: string;
+  content: string; // Markdown content
+  categories: string[];
+  tags: string[];
+}
 
 interface BlogCardProps {
   limit?: number;
@@ -19,9 +32,45 @@ export const BlogCard = ({
   showTitle = true, 
   showSeeAll = true 
 }: BlogCardProps) => {
-  const posts = getBlogs(limit === 0 ? undefined : limit);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const firestore = useFirestore();
 
-  if (posts.length === 0) return null;
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
+        }
+      }
+    };
+    fetchProfile();
+  }, [firestore]);
+
+  const blogsQuery = useMemoFirebase(() => {
+    if (!profileId) return null;
+    let q = query(collection(firestore, `profiles/${profileId}/blogs`), orderBy('date', 'desc'));
+    if (limit > 0) {
+      q = query(q, firestoreLimit(limit));
+    }
+    return q;
+  }, [profileId, firestore, limit]);
+
+  const { data: posts, isLoading } = useCollection<Blog>(blogsQuery);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[...Array(limit > 0 ? limit : 2)].map((_, i) => (
+          <div key={i} className="card h-80 animate-pulse bg-base-300" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!posts || posts.length === 0) return null;
 
   return (
     <div className="space-y-6">

@@ -1,12 +1,49 @@
 'use client';
 
-import React from 'react';
-import { getCategories } from '../data/blogs';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Folder } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+
+interface BlogForCategories {
+  categories: string[];
+}
 
 export const CategoriesCard = () => {
-  const categories = getCategories();
-  
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const firestore = useFirestore();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
+        }
+      }
+    };
+    fetchProfile();
+  }, [firestore]);
+
+  const blogsQuery = useMemoFirebase(() => {
+    if (!profileId) return null;
+    return query(collection(firestore, `profiles/${profileId}/blogs`));
+  }, [profileId, firestore]);
+
+  const { data: blogs, isLoading } = useCollection<BlogForCategories>(blogsQuery);
+
+  const categories = useMemo(() => {
+    if (!blogs) return [];
+    const allCategories = blogs.flatMap(blog => blog.categories || []);
+    return [...new Set(allCategories)];
+  }, [blogs]);
+
+  if (isLoading) {
+    return <div className="card p-6 h-32 animate-pulse bg-base-300" />;
+  }
+
   if (categories.length === 0) return null;
 
   return (

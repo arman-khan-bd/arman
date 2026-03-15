@@ -1,32 +1,87 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Calendar, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft, ServerCrash } from 'lucide-react';
 import Image from 'next/image';
-import { getBlogBySlug } from '../../../data/blogs';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
 import { CommentSection } from '../../../components/CommentSection';
 import { RelatedPosts } from '../../../components/RelatedPosts';
 import { CategoriesCard } from '../../../components/CategoriesCard';
 import { TagsCard } from '../../../components/TagsCard';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+
+interface Blog {
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  cover_image: string;
+  content: string;
+  categories: string[];
+  tags: string[];
+}
 
 export default function BlogDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
 
-  const blog = useMemo(() => {
-    if (!slug) return null;
-    return getBlogBySlug(decodeURIComponent(slug));
-  }, [slug]);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const firestore = useFirestore();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (firestore) {
+        const profilesCollection = collection(firestore, 'profiles');
+        const q = query(profilesCollection, firestoreLimit(1));
+        const profileSnapshot = await getDocs(q);
+        if (!profileSnapshot.empty) {
+          setProfileId(profileSnapshot.docs[0].id);
+        }
+      }
+    };
+    fetchProfile();
+  }, [firestore]);
+
+  const blogQuery = useMemoFirebase(() => {
+    if (!slug || !profileId || !firestore) return null;
+    return query(
+      collection(firestore, `profiles/${profileId}/blogs`),
+      where('slug', '==', decodeURIComponent(slug)),
+      firestoreLimit(1)
+    );
+  }, [slug, profileId, firestore]);
+
+  const { data: blogs, isLoading } = useCollection<Blog>(blogQuery);
+  const blog = blogs?.[0];
+
+  if (isLoading || !profileId) {
+    return (
+       <div className="min-h-screen flex items-center justify-center bg-base-200">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!blog) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Blog post not found.
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <ServerCrash size={64} className="text-primary mb-4" />
+        <h1 className="text-3xl font-bold">Blog Post Not Found</h1>
+        <p className="text-base-content/60 mt-2">
+          The blog post you're looking for doesn't seem to exist.
+        </p>
+        <button 
+            onClick={() => router.back()}
+            className="mt-8 flex items-center gap-2 text-sm font-bold btn btn-primary"
+          >
+            <ArrowLeft size={18} />
+            <span>Go Back</span>
+          </button>
       </div>
     );
   }
