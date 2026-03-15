@@ -71,6 +71,7 @@ export const ProjectsCard = ({
         isOpen={!!selectedProject} 
         onClose={() => setSelectedProject(null)} 
         projectName={selectedProject || ''} 
+        profileId={profileId}
       />
       {(showTitle || showSeeAll) && (
         <div className="flex justify-between items-center">
@@ -158,5 +159,3 @@ export const ProjectsCard = ({
     </div>
   );
 };
-
-    

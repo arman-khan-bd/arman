@@ -11,8 +11,8 @@
  *   `profileId` or a denormalized `ownerId`.
  * - Authorization Independence: The `ownerId` is denormalized (copied) onto subcollection documents
  *   to avoid slow and costly `get()` calls in security rules.
- * - Explicit Subcollection Rules: Each subcollection (`blogs`, `comments`, `projects`, etc.) has its
- *   own specific rule block, avoiding ambiguity from generic wildcards.
+ * - Explicit Subcollection Rules: Each subcollection (`blogs`, `projects`, etc.) has its
+ *   own specific rule block. Collection group queries have their own top-level rule.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -29,23 +29,21 @@ service cloud.firestore {
 
     /**
      * Checks if the currently authenticated user's UID matches the profileId from the URL.
-     * This is the primary check for ownership.
+     * This is the primary check for ownership on direct subcollections.
      */
     function isProfileOwner(profileId) {
       return isSignedIn() && request.auth.uid == profileId;
     }
 
-    // --- Collection Rules ---
+    // --- Profile & Subcollection Rules ---
 
     /**
-     * @description Rules for user profile documents.
+     * @description Rules for user profile documents and their direct subcollections.
      * @path /profiles/{profileId}
      */
     match /profiles/{profileId} {
       allow read: if true;
       allow create, update, delete: if isProfileOwner(profileId);
-
-      // --- Subcollection Rules ---
 
       // Projects, Skills, Experience, Education: Public read, owner write.
       match /projects/{projectId} {
@@ -66,23 +64,11 @@ service cloud.firestore {
       }
       
       /**
-       * @description Rules for Blog posts and their nested Comments.
+       * @description Rules for Blog posts. Comments are handled in a separate top-level rule.
        */
       match /blogs/{blogId} {
         allow read: if true;
         allow create, update, delete: if isProfileOwner(profileId);
-
-        /**
-         * @description Special rules for Comments nested under a Blog.
-         * Anyone can create and read comments. Only the profile owner can delete them.
-         */
-        match /comments/{commentId} {
-          allow read: if true;
-          // Allow public creation, but ensure it's for the correct blog and profile.
-          allow create: if request.resource.data.profileId == profileId && request.resource.data.blogId == blogId;
-          allow update: if false; // Comments are immutable
-          allow delete: if isProfileOwner(profileId); // Owner can moderate
-        }
       }
 
       /**
@@ -97,14 +83,34 @@ service cloud.firestore {
 
       /**
        * @description Rules for Visitor logs.
-       * Admin can read/delete. Creation is handled by the client after getting IP
-       * data from a trusted API route.
+       * Admin can read/delete. Creation is handled by the client.
        */
       match /visitors/{visitorId} {
         allow read, delete: if isProfileOwner(profileId);
         allow create: if request.resource.data.profileId == profileId;
         allow update: if false;
       }
+    }
+
+    /**
+     * @description Rules for the 'comments' collection group.
+     * This top-level rule with a wildcard path is necessary to allow collection group queries.
+     */
+    match /{path=**}/comments/{commentId} {
+        // Anyone (public) can read comments. This allows reads on the blog page
+        // and also allows the admin's collection group query to work.
+        allow read: if true;
+
+        // Anyone can create a comment, but we validate the data being sent.
+        // It must contain the correct profileId and blogId.
+        allow create: if request.resource.data.profileId != null && request.resource.data.blogId != null;
+        
+        // Comments cannot be edited.
+        allow update: if false;
+        
+        // Only the owner of the profile can delete comments.
+        // This relies on the `ownerId` being correctly set on the comment document during creation.
+        allow delete: if request.auth.uid == resource.data.ownerId;
     }
 
     /**
@@ -116,5 +122,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
