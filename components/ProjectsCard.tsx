@@ -41,6 +41,10 @@ export const ProjectsCard = ({
         const response = await fetch(
           `https://api.github.com/users/${gitprofileConfig.github.username}/repos?per_page=100`
         );
+        if (!response.ok) {
+          console.error('Error fetching GitHub repos data:', response.status, response.statusText);
+          return;
+        }
         let data: Repo[] = await response.json();
 
         if (gitprofileConfig.github.exclude.forks) {

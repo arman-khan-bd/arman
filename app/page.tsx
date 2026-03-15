@@ -19,6 +19,10 @@ export default function Home() {
     const fetchUser = async () => {
       try {
         const response = await fetch(`https://api.github.com/users/${gitprofileConfig.github.username}`);
+        if (!response.ok) {
+          console.error('Error fetching GitHub user data:', response.status, response.statusText);
+          return;
+        }
         const data = await response.json();
         setUser(data);
       } catch (error) {
