@@ -123,12 +123,12 @@ export default function Home() {
           <Heart size={14} className="text-red-500 fill-current" />
           <span>by</span>
           <a 
-            href={`https://github.com/${profile?.githubUsername || gitprofileConfig.github.username}`} 
+            href={`https://github.com/arifszn/gitprofile`} 
             target="_blank" 
             rel="noreferrer"
             className="font-bold text-base-content/80 hover:text-primary transition-colors"
           >
-            {profile?.displayName || 'Arman Ali Khan'}
+            {'gitprofile'}
           </a>
         </div>
         <p>© {new Date().getFullYear()} {profile?.displayName || 'Arman Ali Khan'}</p>
