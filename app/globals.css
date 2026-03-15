@@ -43,32 +43,62 @@
   body {
     @apply bg-base-200 text-base-content font-sans transition-colors duration-300;
   }
-   .mdxeditor-toolbar {
-    background-color: hsl(var(--base-200));
-    border-color: hsl(var(--base-300));
-  }
-  .mdxeditor-toolbar button {
-    color: hsl(var(--base-content));
-  }
-  .mdxeditor-toolbar button:hover {
-    background-color: hsl(var(--base-300));
-  }
-  .mdxeditor-active-toolbar-button {
-     background-color: hsl(var(--base-300));
-  }
   .mdxeditor-root-container {
-    background-color: hsl(var(--base-100));
-    border-color: hsl(var(--base-300));
-    color: hsl(var(--base-content));
+    --mdxeditor-background: hsl(var(--base-100));
+    --mdxeditor-text-color: hsl(var(--base-content));
+    --mdxeditor-text-muted-color: hsl(var(--base-content) / 0.6);
+    --mdxeditor-border-color: hsl(var(--base-300));
+    
+    --mdxeditor-toolbar-background: hsl(var(--base-200));
+    --mdxeditor-toolbar-item-color: hsl(var(--base-content));
+    --mdxeditor-toolbar-item-hover-background: hsl(var(--base-300));
+    --mdxeditor-toolbar-item-active-background: hsl(var(--base-300));
+
+    --mdxeditor-input-background: hsl(var(--base-200));
+    --mdxeditor-input-border-color: hsl(var(--base-300));
+    --mdxeditor-input-focus-border-color: hsl(var(--primary));
+
+    --mdxeditor-button-background: hsl(var(--primary));
+    --mdxeditor-button-text-color: hsl(var(--primary-content));
+    --mdxeditor-button-hover-background: hsl(var(--primary) / 0.9);
+
+    background-color: var(--mdxeditor-background);
+    color: var(--mdxeditor-text-color);
+    border-color: var(--mdxeditor-border-color);
     border-radius: 0.75rem;
     border-width: 1px;
     font-family: inherit;
   }
-  .mdxeditor-root-container .mdxeditor-placeholder {
-    color: hsl(var(--base-content) / 0.5);
+
+  .mdxeditor-toolbar {
+    background-color: var(--mdxeditor-toolbar-background);
+    border-color: var(--mdxeditor-border-color);
   }
+
+  .mdxeditor-toolbar button, .mdxeditor-toolbar-base button {
+    color: var(--mdxeditor-toolbar-item-color) !important;
+  }
+  .mdxeditor-toolbar button:hover, .mdxeditor-toolbar-base button:hover {
+    background-color: var(--mdxeditor-toolbar-item-hover-background) !important;
+  }
+  .mdxeditor-active-toolbar-button, .mdxeditor-toolbar-base .mdxeditor-active-toolbar-button {
+     background-color: var(--mdxeditor-toolbar-item-active-background) !important;
+  }
+   .mdxeditor-dialog-input {
+    background-color: var(--mdxeditor-input-background) !important;
+    border-color: var(--mdxeditor-input-border-color) !important;
+    color: var(--mdxeditor-text-color) !important;
+  }
+  .mdxeditor-dialog-input:focus {
+    border-color: var(--mdxeditor-input-focus-border-color) !important;
+  }
+  
   .dark-theme .mdxeditor-root-container {
     background-color: hsl(var(--base-200));
+  }
+  
+  .mdxeditor-root-container .mdxeditor-placeholder {
+    color: hsl(var(--base-content) / 0.5);
   }
 }
 
