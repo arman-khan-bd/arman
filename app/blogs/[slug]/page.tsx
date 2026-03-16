@@ -1,21 +1,11 @@
-'use client';
+import React from 'react';
+import type { Metadata } from 'next';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
-import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
-import { Calendar, ArrowLeft, ServerCrash } from 'lucide-react';
-import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import { format } from 'date-fns';
-import { CommentSection } from '../../../components/CommentSection';
-import { RelatedPosts } from '../../../components/RelatedPosts';
-import { CategoriesCard } from '../../../components/CategoriesCard';
-import { TagsCard } from '../../../components/TagsCard';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { firebaseConfig } from '../../../src/firebase/config';
 import { gitprofileConfig } from '../../../gitprofile.config';
+import BlogClientPage from './BlogClientPage';
 
 interface Blog {
   id: string;
@@ -29,25 +19,14 @@ interface Blog {
   tags: string[];
 }
 
-export default function BlogDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const slug = params.slug as string;
+// This function can run on the server because it doesn't depend on client-side hooks.
+// We initialize a temporary Firebase instance here for server-side rendering.
+async function getBlogData(slug: string): Promise<Blog | null> {
+    try {
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const firestore = getFirestore(app);
+        const profileId = gitprofileConfig.github.username;
 
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const profileId = gitprofileConfig.github.username;
-  const firestore = useFirestore();
-
-  useEffect(() => {
-    const fetchBlogData = async () => {
-      if (!firestore || !slug) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-
-      try {
         const blogQuery = query(
           collection(firestore, `profiles/${profileId}/blogs`),
           where('slug', '==', decodeURIComponent(slug)),
@@ -56,109 +35,61 @@ export default function BlogDetailsPage() {
         const blogSnapshot = await getDocs(blogQuery);
         
         if (!blogSnapshot.empty) {
-          setBlog({ id: blogSnapshot.docs[0].id, ...blogSnapshot.docs[0].data() } as Blog);
-        } else {
-          setBlog(null);
+          const doc = blogSnapshot.docs[0];
+          return { id: doc.id, ...doc.data() } as Blog;
         }
-      } catch(error) {
-        console.error("Error fetching blog details:", error);
-        setBlog(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchBlogData();
-  }, [firestore, slug, profileId]);
+    } catch (error) {
+        console.error("Server-side fetch for blog failed:", error);
+    }
+    
+    return null;
+}
 
-
-  if (isLoading || (!blog && isLoading)) {
-    return (
-       <div className="min-h-screen flex items-center justify-center bg-base-200">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const blog = await getBlogData(params.slug);
 
   if (!blog) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
-        <ServerCrash size={64} className="text-primary mb-4" />
-        <h1 className="text-3xl font-bold">Blog Post Not Found</h1>
-        <p className="text-base-content/60 mt-2">
-          The blog post you're looking for doesn't seem to exist.
-        </p>
-        <button 
-            onClick={() => router.back()}
-            className="mt-8 flex items-center gap-2 text-sm font-bold btn btn-primary"
-          >
-            <ArrowLeft size={18} />
-            <span>Go Back</span>
-          </button>
-      </div>
-    );
+    return {
+      title: 'Blog Post Not Found',
+      description: 'The blog post you are looking for does not exist.',
+    };
   }
+  
+  // Use the user's custom domain for canonical URLs.
+  const blogUrl = `https://www.armankhan.me/blogs/${blog.slug}`;
 
-  return (
-    <div className="min-h-screen bg-base-100 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-base-100/80 backdrop-blur-md border-b border-base-300">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button 
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-sm font-bold hover:text-primary transition-colors"
-          >
-            <ArrowLeft size={18} />
-            <span>Back</span>
-          </button>
-          <h1 className="text-lg font-bold truncate max-w-[200px] md:max-w-none">{blog.title}</h1>
-          <div className="w-10 md:w-20" /> {/* Spacer */}
-        </div>
-      </div>
+  return {
+    title: blog.title,
+    description: blog.description,
+    openGraph: {
+      title: blog.title,
+      description: blog.description,
+      url: blogUrl,
+      images: [
+        {
+          url: blog.cover_image,
+          width: 1200,
+          height: 630,
+          alt: blog.title,
+        },
+      ],
+      type: 'article',
+      article: {
+        publishedTime: blog.date,
+        authors: [gitprofileConfig.github.username],
+        tags: blog.tags,
+      },
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: blog.title,
+      description: blog.description,
+      images: [blog.cover_image],
+    },
+  };
+}
 
-      <main className="max-w-7xl mx-auto px-4 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-8"
-            >
-              <div>
-                <h1 className="text-4xl font-bold mb-4">{blog.title}</h1>
-                <div className="flex items-center gap-2 text-sm text-base-content/50">
-                  <Calendar size={14} />
-                  <span>{format(new Date(blog.date), 'MMMM dd, yyyy')}</span>
-                </div>
-              </div>
-
-              <div className="aspect-video relative rounded-2xl overflow-hidden shadow-lg">
-                <Image
-                  src={blog.cover_image}
-                  alt={blog.title}
-                  fill
-                  className="object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-
-              <article className="prose lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{blog.content}</ReactMarkdown>
-              </article>
-              
-              {profileId && blog.id && blog.slug && <CommentSection profileId={profileId} blogId={blog.id} blogSlug={blog.slug} />}
-            </motion.div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="space-y-8 lg:sticky lg:top-24 self-start">
-            <RelatedPosts currentSlug={blog.slug} profileId={profileId} />
-            <CategoriesCard profileId={profileId} />
-            <TagsCard profileId={profileId} />
-          </aside>
-        </div>
-      </main>
-    </div>
-  );
+export default async function BlogDetailsPage({ params }: { params: { slug: string } }) {
+  const blog = await getBlogData(params.slug);
+  return <BlogClientPage blog={blog} />;
 }
