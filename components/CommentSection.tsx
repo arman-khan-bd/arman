@@ -6,7 +6,7 @@ import { Send, CornerDownRight, MessageSquareReply, Loader2 } from 'lucide-react
 import { useFirestore, useUser, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, getDocs, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { gitprofileConfig } from '../../gitprofile.config';
+import { gitprofileConfig } from '../gitprofile.config';
 
 interface Comment {
   id: string;
