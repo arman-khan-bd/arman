@@ -168,7 +168,7 @@ export default function ManageProjectsPage() {
           
           <div>
             <label className="text-sm font-bold block mb-2">Long Description</label>
-            <MdxEditor markdown={formState.longDescription} onChange={handleMarkdownChange} placeholder="Full project details (for detail page)..." />
+            <MdxEditor key={editingProject?.id || 'new-project'} markdown={formState.longDescription} onChange={handleMarkdownChange} placeholder="Full project details (for detail page)..." />
           </div>
           
           <textarea name="techStack" value={formState.techStack} onChange={handleInputChange} placeholder="Tech Stack (comma-separated, e.g., React, Next.js)" className={textareaClass} />
