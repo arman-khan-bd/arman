@@ -197,7 +197,8 @@ export const BlogCard = ({
                 <Image 
                   src={post.cover_image} 
                   alt={post.title}
-                  fill
+                  width={300}
+                  height={200}
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
