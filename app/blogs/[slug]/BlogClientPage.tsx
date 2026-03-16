@@ -95,7 +95,7 @@ export default function BlogClientPage({ blog }: { blog: Blog | null }) {
                 />
               </div>
 
-              <article className="prose lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
+              <article className="prose prose-invert lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{blog.content}</ReactMarkdown>
               </article>
               

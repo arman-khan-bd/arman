@@ -144,7 +144,7 @@ export default function ProjectClientPage({ project }: { project: ProjectDetail 
             {/* Description */}
             <section className="card p-8 border border-base-300 bg-base-100">
               <h2 className="text-2xl font-bold mb-4">About the Project</h2>
-              <article className="prose lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
+              <article className="prose prose-invert lg:prose-xl max-w-none prose-h1:text-primary prose-headings:font-bold prose-a:text-primary hover:prose-a:underline">
                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{project.longDescription || project.description}</ReactMarkdown>
               </article>
             </section>
