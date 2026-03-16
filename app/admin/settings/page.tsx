@@ -243,14 +243,17 @@ export default function ManageSettingsPage() {
                   cloudName={cloudName}
                   uploadPreset={uploadPreset}
                 />
-                <CloudinaryUploader
-                  label="Resume (PDF)"
-                  currentUrl={profile.resumeUrl}
-                  onUrlChange={(url) => handleUrlChange('resumeUrl', url)}
-                  cloudName={cloudName}
-                  uploadPreset={uploadPreset}
-                  accept="application/pdf"
-                />
+                <div>
+                  <label className="text-sm font-bold block mb-2">Resume URL</label>
+                  <input
+                    type="url"
+                    name="resumeUrl"
+                    value={profile.resumeUrl || ''}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com/your-resume.pdf"
+                    className={inputClass}
+                  />
+                </div>
                 <textarea
                   name="aboutMe"
                   value={profile.aboutMe || ''}
