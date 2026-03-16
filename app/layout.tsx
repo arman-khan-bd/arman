@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Anek_Bangla } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { FirebaseClientProvider } from '../src/firebase/client-provider';
 import { VisitorLogger } from '../src/components/VisitorLogger';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const anekBangla = Anek_Bangla({
+  subsets: ['bengali', 'latin'],
+  variable: '--font-sans',
+});
 
 export const metadata: Metadata = {
   title: 'Arman Ali Khan | Full Stack Developer',
@@ -18,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${anekBangla.variable}`} suppressHydrationWarning>
       <body className="antialiased">
         <FirebaseClientProvider>
           <ThemeProvider />
@@ -29,5 +32,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    
