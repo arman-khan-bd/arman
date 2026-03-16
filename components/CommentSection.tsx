@@ -170,76 +170,77 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
       {isLoading && <div className="text-center p-8"><Loader2 size={32} className="animate-spin text-primary mx-auto" /></div>}
 
       {!isLoading && (!comments || comments.length === 0) && (
-        <p className="text-base-content/60 text-center py-4">Be the first to comment.</p>
+        <p className="text-base-content/60 text-center py-4 border-t border-base-300">Be the first to comment.</p>
       )}
 
       {/* Comments List */}
-      <div className="space-y-8">
-        {comments?.map(comment => (
-          <div key={comment.id} className="flex items-start gap-4">
-            <div className="avatar placeholder shrink-0">
-              <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
-                <span className="text-xl font-bold">{comment.fullName.charAt(0).toUpperCase()}</span>
-              </div>
-            </div>
-            <div className="flex-1 space-y-4">
-              {/* Original Comment */}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-bold">{comment.fullName}</p>
-                  <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.createdAt), 'MMM dd, yyyy')}</span>
+      {comments && comments.length > 0 && (
+        <div className="space-y-8 border-t border-base-300 pt-8">
+          {comments.map(comment => (
+            <div key={comment.id} className="flex items-start gap-4">
+              <div className="avatar placeholder shrink-0">
+                <div className="bg-neutral text-neutral-content rounded-full w-12 h-12" style={{
+                  display: 'flex', width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center'
+                }}>
+                  <span className="text-xl font-bold">{comment.fullName.charAt(0).toUpperCase()}</span>
                 </div>
-                <p className="text-base-content/80 whitespace-pre-wrap">{comment.text}</p>
-                 {user && !comment.replyText && (
-                  <button onClick={() => setReplyingTo(comment.id === replyingTo ? null : comment.id)} className="text-primary text-xs font-bold mt-2 flex items-center gap-1 hover:underline">
-                    <MessageSquareReply size={14} />
-                    <span>Reply</span>
-                  </button>
-                )}
               </div>
 
-              {/* Admin Reply */}
-              {comment.replyText && (
-                 <div className="flex items-start gap-4 p-4 bg-base-200 rounded-xl">
-                    <div className="avatar placeholder shrink-0">
-                      <div className="bg-primary text-primary-content rounded-full w-10 h-10">
-                        <span className="text-lg font-bold">{comment.repliedBy?.charAt(0).toUpperCase()}</span>
-                      </div>
-                    </div>
-                     <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-bold">{comment.repliedBy}</p>
-                          <span className="badge badge-primary badge-sm">Admin</span>
-                          <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.replyDate!), 'MMM dd, yyyy')}</span>
-                        </div>
-                        <p className="text-base-content/80 whitespace-pre-wrap">{comment.replyText}</p>
-                     </div>
-                 </div>
-              )}
-              
-              {/* Reply Form for Admin */}
-              {user && replyingTo === comment.id && (
-                <div className="space-y-2">
-                  <textarea 
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder={`Replying to ${comment.fullName}...`}
-                    className={`${inputClass} min-h-[80px]`}
-                    autoFocus
-                  />
-                  <div className="flex justify-end gap-2">
-                     <button onClick={() => setReplyingTo(null)} className="btn btn-sm btn-ghost">Cancel</button>
-                     <button onClick={() => handleReplySubmit(comment.id)} className="btn btn-sm btn-primary" disabled={isSubmittingReply}>
-                        {isSubmittingReply ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
-                        <span className="ml-1">Post Reply</span>
-                     </button>
+              <div className="flex-1">
+                {/* Original Comment */}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-bold">{comment.fullName}</p>
+                    <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.createdAt), 'MMM dd, yyyy')}</span>
                   </div>
+                  <p className="text-base-content/80 whitespace-pre-wrap">{comment.text}</p>
+                  {user && !comment.replyText && (
+                    <button onClick={() => setReplyingTo(comment.id === replyingTo ? null : comment.id)} className="text-primary text-xs font-bold mt-2 flex items-center gap-1 hover:underline">
+                      <MessageSquareReply size={14} />
+                      <span>Reply</span>
+                    </button>
+                  )}
                 </div>
-              )}
+
+                {/* Reply Form for Admin */}
+                {user && replyingTo === comment.id && (
+                  <div className="space-y-2 mt-4">
+                    <textarea 
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder={`Replying to ${comment.fullName}...`}
+                      className={`${inputClass} min-h-[80px]`}
+                      autoFocus
+                    />
+                    <div className="flex justify-end gap-2">
+                        <button onClick={() => setReplyingTo(null)} className="btn btn-sm btn-ghost">Cancel</button>
+                        <button onClick={() => handleReplySubmit(comment.id)} className="btn btn-sm btn-primary" disabled={isSubmittingReply}>
+                          {isSubmittingReply ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
+                          <span className="ml-1">Post Reply</span>
+                        </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Admin Reply */}
+                {comment.replyText && (
+                   <div className="flex items-start gap-3 mt-4 p-4 bg-base-200 rounded-xl border border-base-300">
+                     <CornerDownRight size={18} className="text-primary shrink-0 mt-1" />
+                      <div className="flex-1">
+                         <div className="flex items-center gap-2 mb-1">
+                           <p className="font-bold">{comment.repliedBy}</p>
+                           <span className="badge badge-primary badge-sm">Admin</span>
+                           <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.replyDate!), 'MMM dd, yyyy')}</span>
+                         </div>
+                         <p className="text-base-content/80 whitespace-pre-wrap">{comment.replyText}</p>
+                      </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
