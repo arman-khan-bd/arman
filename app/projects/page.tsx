@@ -34,10 +34,11 @@ export default function AllProjectsPage() {
           transition={{ duration: 0.5 }}
         >
           <ProjectsCard 
-            limit={0} // 0 means no limit (show all)
+            limit={0} // Using limit 0 enables pagination
             showTitle={false} 
             showSeeAll={false}
             profileId={profileId}
+            listView={true} // Enable list view
           />
         </motion.div>
       </main>
