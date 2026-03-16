@@ -48,11 +48,12 @@ const textareaClass = `${inputClass} min-h-[120px]`;
 
 const createSlug = (title: string) => {
   return title
+    .toString()
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\p{L}\p{N}-]/gu, '') // Remove invalid chars
+    .replace(/-+/g, '-'); // Collapse dashes
 }
 
 export default function ManageBlogsPage() {
@@ -167,7 +168,7 @@ export default function ManageBlogsPage() {
           
           <div>
             <label className="text-sm font-bold block mb-2">Blog Content</label>
-            <MdxEditor markdown={formState.content} onChange={handleMarkdownChange} placeholder="Full blog content (Markdown supported)..."/>
+            <MdxEditor key={editingBlog?.id || 'new-blog'} markdown={formState.content} onChange={handleMarkdownChange} placeholder="Full blog content (Markdown supported)..."/>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
