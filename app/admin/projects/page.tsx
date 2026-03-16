@@ -91,8 +91,13 @@ export default function ManageProjectsPage() {
   const handleEditClick = (project: Project) => {
     setEditingProject(project);
     setFormState({
-        ...project,
-        techStack: project.techStack.join(', '),
+        name: project.name || '',
+        description: project.description || '',
+        longDescription: project.longDescription || '',
+        techStack: project.techStack ? project.techStack.join(', ') : '',
+        repoUrl: project.repoUrl || '',
+        liveUrl: project.liveUrl || '',
+        screenshots: project.screenshots || [],
     });
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
