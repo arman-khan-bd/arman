@@ -443,11 +443,10 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Comment",
       "type": "object",
-      "description": "Represents a single comment on a blog post.",
+      "description": "Represents a single comment on a blog post. Can contain a reply from an admin.",
       "properties": {
         "id": { "type": "string" },
         "profileId": { "type": "string" },
-        "ownerId": { "type": "string" },
         "blogId": { "type": "string" },
         "blogSlug": { "type": "string" },
         "fullName": { "type": "string" },
@@ -457,9 +456,12 @@
         "ip": { "type": "string", "description": "The IP address of the commenter." },
         "country": { "type": "string", "description": "The country of the commenter." },
         "city": { "type": "string", "description": "The city of the commenter." },
-        "countryCode": { "type": "string", "description": "The country code of the commenter." }
+        "countryCode": { "type": "string", "description": "The country code of the commenter." },
+        "replyText": { "type": "string", "description": "The admin's reply to this comment." },
+        "replyDate": { "type": "string", "format": "date-time", "description": "The timestamp for the admin's reply." },
+        "repliedBy": { "type": "string", "description": "The name of the admin who replied." }
       },
-      "required": ["id", "profileId", "ownerId", "blogId", "blogSlug", "fullName", "text", "createdAt"]
+      "required": ["id", "profileId", "blogId", "blogSlug", "fullName", "text", "createdAt"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -508,7 +510,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "isRead": { "type": "boolean" }
       },
-      "required": ["id", "profileId", "ownerId", "fullName", "email", "message", "createdAt"]
+      "required": ["id", "profileId", "fullName", "email", "message", "createdAt"]
     },
     "Visitor": {
       "$schema": "http://json-schema.org/draft-07/schema#",

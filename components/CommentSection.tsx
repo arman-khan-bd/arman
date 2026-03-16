@@ -2,16 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Send } from 'lucide-react';
-import { useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { Send, CornerDownRight, MessageSquareReply, Loader2 } from 'lucide-react';
+import { useFirestore, useUser, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, getDocs, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { gitprofileConfig } from '../../gitprofile.config';
 
 interface Comment {
   id: string;
   fullName: string;
   text: string;
   createdAt: string; // ISO String
+  replyText?: string;
+  replyDate?: string;
+  repliedBy?: string;
 }
 
 interface CommentSectionProps {
@@ -20,12 +24,20 @@ interface CommentSectionProps {
   blogSlug: string;
 }
 
+const inputClass = "w-full p-3 bg-base-200 border border-base-300 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all";
+
 export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionProps) => {
   const firestore = useFirestore();
+  const { user } = useUser();
   const [newComment, setNewComment] = useState({ fullName: '', email: '', text: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   // Pre-fill user info from localStorage
   useEffect(() => {
@@ -88,7 +100,6 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
       }
     } catch (error) {
       console.error("Could not fetch visitor IP for comment:", error);
-      // Continue without IP data
     }
 
     const commentData = {
@@ -100,7 +111,6 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
       ...visitorData,
     };
 
-    // Optimistic UI update
     const optimisticComment: Comment = {
       id: `optimistic-${Date.now()}`,
       fullName: newComment.fullName,
@@ -111,80 +121,121 @@ export const CommentSection = ({ profileId, blogId, blogSlug }: CommentSectionPr
 
     const commentsCollection = collection(firestore, `profiles/${profileId}/blogs/${blogId}/comments`);
     
-    try {
-      addDocumentNonBlocking(commentsCollection, commentData);
-      // Save user info to localStorage for next time
-      localStorage.setItem('commenterInfo', JSON.stringify({ fullName: newComment.fullName, email: newComment.email }));
-    } finally {
-      // Clear only the text field, keep user details for convenience
-      setNewComment(prev => ({ ...prev, text: '' }));
-      setIsSubmitting(false);
-    }
+    addDocumentNonBlocking(commentsCollection, commentData);
+    localStorage.setItem('commenterInfo', JSON.stringify({ fullName: newComment.fullName, email: newComment.email }));
+    setNewComment(prev => ({ ...prev, text: '' }));
+    setIsSubmitting(false);
+  };
+  
+  const handleReplySubmit = async (commentId: string) => {
+    if (!replyText.trim() || !user || !firestore) return;
+    setIsSubmittingReply(true);
+    
+    const commentRef = doc(firestore, `profiles/${profileId}/blogs/${blogId}/comments/${commentId}`);
+    
+    const replyData = {
+      replyText: replyText,
+      replyDate: new Date().toISOString(),
+      repliedBy: user.displayName || gitprofileConfig.github.username,
+    };
+    
+    updateDocumentNonBlocking(commentRef, replyData);
+    
+    setComments(prev => prev.map(c => c.id === commentId ? { ...c, ...replyData } : c));
+    setReplyText('');
+    setReplyingTo(null);
+    setIsSubmittingReply(false);
   };
 
+
   return (
-    <div className="card p-8">
+    <div className="card p-6 md:p-8">
       <h2 className="text-2xl font-bold mb-6">Discussion ({comments?.length || 0})</h2>
       
+      {/* New Comment Form */}
       <form onSubmit={handleCommentSubmit} className="space-y-4 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <input
-            type="text"
-            name="fullName"
-            value={newComment.fullName}
-            onChange={handleInputChange}
-            placeholder="Full Name"
-            className="w-full p-3 bg-base-200 border border-base-300 rounded-xl"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            value={newComment.email}
-            onChange={handleInputChange}
-            placeholder="Email Address"
-            className="w-full p-3 bg-base-200 border border-base-300 rounded-xl"
-            required
-          />
+           <input type="text" name="fullName" value={newComment.fullName} onChange={handleInputChange} placeholder="Full Name" className={inputClass} required />
+           <input type="email" name="email" value={newComment.email} onChange={handleInputChange} placeholder="Email Address" className={inputClass} required />
         </div>
-        <div className="relative">
-            <textarea
-                name="text"
-                value={newComment.text}
-                onChange={handleInputChange}
-                placeholder="Add to the discussion..."
-                className="w-full p-4 bg-base-200 border border-base-300 rounded-xl pr-14 min-h-[100px]"
-                required
-            />
-            <button type="submit" className="absolute right-2 top-4 p-2 rounded-full bg-primary text-primary-content hover:opacity-90" disabled={isSubmitting}>
-                <Send size={20} />
+        <textarea name="text" value={newComment.text} onChange={handleInputChange} placeholder="Add to the discussion..." className={`${inputClass} min-h-[100px]`} required />
+        <div className="flex justify-end">
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                <span className="ml-2">{isSubmitting ? 'Posting...' : 'Post Comment'}</span>
             </button>
         </div>
       </form>
       
-      {isLoading && <div className="text-center">Loading comments...</div>}
+      {isLoading && <div className="text-center p-8"><Loader2 size={32} className="animate-spin text-primary mx-auto" /></div>}
 
       {!isLoading && (!comments || comments.length === 0) && (
         <p className="text-base-content/60 text-center py-4">Be the first to comment.</p>
       )}
 
       {/* Comments List */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {comments?.map(comment => (
-          <div key={comment.id}>
-            <div className="flex items-start gap-4">
-              <div className="avatar placeholder">
-                <div className="bg-neutral text-neutral-content rounded-full w-12">
-                  <span className="text-xl">{comment.fullName.charAt(0).toUpperCase()}</span>
-                </div>
+          <div key={comment.id} className="flex items-start gap-4">
+            <div className="avatar placeholder shrink-0">
+              <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
+                <span className="text-xl font-bold">{comment.fullName.charAt(0).toUpperCase()}</span>
               </div>
-              <div className="flex-1">
+            </div>
+            <div className="flex-1 space-y-4">
+              {/* Original Comment */}
+              <div>
                 <div className="flex items-center gap-2 mb-1">
                   <p className="font-bold">{comment.fullName}</p>
                   <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.createdAt), 'MMM dd, yyyy')}</span>
                 </div>
-                <p className="text-base-content/80 mb-2 whitespace-pre-wrap">{comment.text}</p>
+                <p className="text-base-content/80 whitespace-pre-wrap">{comment.text}</p>
+                 {user && !comment.replyText && (
+                  <button onClick={() => setReplyingTo(comment.id === replyingTo ? null : comment.id)} className="text-primary text-xs font-bold mt-2 flex items-center gap-1 hover:underline">
+                    <MessageSquareReply size={14} />
+                    <span>Reply</span>
+                  </button>
+                )}
               </div>
+
+              {/* Admin Reply */}
+              {comment.replyText && (
+                 <div className="flex items-start gap-4 p-4 bg-base-200 rounded-xl">
+                    <div className="avatar placeholder shrink-0">
+                      <div className="bg-primary text-primary-content rounded-full w-10 h-10">
+                        <span className="text-lg font-bold">{comment.repliedBy?.charAt(0).toUpperCase()}</span>
+                      </div>
+                    </div>
+                     <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold">{comment.repliedBy}</p>
+                          <span className="badge badge-primary badge-sm">Admin</span>
+                          <span className="text-xs text-base-content/50">&bull; {format(new Date(comment.replyDate!), 'MMM dd, yyyy')}</span>
+                        </div>
+                        <p className="text-base-content/80 whitespace-pre-wrap">{comment.replyText}</p>
+                     </div>
+                 </div>
+              )}
+              
+              {/* Reply Form for Admin */}
+              {user && replyingTo === comment.id && (
+                <div className="space-y-2">
+                  <textarea 
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder={`Replying to ${comment.fullName}...`}
+                    className={`${inputClass} min-h-[80px]`}
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-2">
+                     <button onClick={() => setReplyingTo(null)} className="btn btn-sm btn-ghost">Cancel</button>
+                     <button onClick={() => handleReplySubmit(comment.id)} className="btn btn-sm btn-primary" disabled={isSubmittingReply}>
+                        {isSubmittingReply ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
+                        <span className="ml-1">Post Reply</span>
+                     </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
