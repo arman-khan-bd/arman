@@ -127,3 +127,7 @@
 .contains-task-list list{
   list-style: none;
 }
+
+ul.contains-task-list {
+  list-style: none!important;
+}
