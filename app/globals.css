@@ -119,3 +119,11 @@
     @apply inline-flex;
   }
 }
+
+
+.contains-task-list{
+  padding: 0!important;
+}
+.contains-task-list list{
+  list-style: none;
+}
