@@ -31,11 +31,11 @@ export const CloudinaryUploader: React.FC<CloudinaryUploaderProps> = ({ label, c
       })
       .then(resp => resp.json())
       .then(data => {
-        if (data.url) {
-          resolve(data.url);
+        if (data.secure_url) {
+          resolve(data.secure_url);
         } else {
           console.error("Cloudinary upload error:", data);
-          reject(new Error('Upload failed. Response did not contain URL.'));
+          reject(new Error('Upload failed. Response did not contain a secure_url.'));
         }
       })
       .catch(err => {
