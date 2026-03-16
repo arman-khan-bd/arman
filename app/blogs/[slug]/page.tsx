@@ -74,11 +74,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         },
       ],
       type: 'article',
-      article: {
-        publishedTime: blog.date,
-        authors: [gitprofileConfig.github.username],
-        tags: blog.tags,
-      },
+      publishedTime: blog.date,
+      authors: [gitprofileConfig.github.username],
+      tags: blog.tags,
     },
     twitter: {
       card: 'summary_large_image',
