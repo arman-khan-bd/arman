@@ -58,6 +58,7 @@ export const ProfileCard = ({ profile, isLoading }: ProfileCardProps) => {
               height={200}
               className="object-cover"
               referrerPolicy="no-referrer"
+              priority
             />
           </div>
         </div>

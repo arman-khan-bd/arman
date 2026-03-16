@@ -103,6 +103,7 @@ export default function ProjectClientPage({ project }: { project: ProjectDetail 
                       fill
                       className="object-cover"
                       referrerPolicy="no-referrer"
+                      priority
                     />
                   </motion.div>
                 </AnimatePresence>

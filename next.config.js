@@ -9,8 +9,13 @@ const nextConfig = {
   },
   // Allow access to remote image placeholder and configure for Cloudflare.
   images: {
-    unoptimized: true,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'picsum.photos',

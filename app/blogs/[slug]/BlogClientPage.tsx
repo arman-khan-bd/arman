@@ -92,6 +92,7 @@ export default function BlogClientPage({ blog }: { blog: Blog | null }) {
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
+                  priority
                 />
               </div>
 
